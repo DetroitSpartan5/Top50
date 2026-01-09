@@ -29,12 +29,13 @@ export function ListCard({
   const config = getCategoryConfig(category)
   const progress = Math.min((itemCount / parseInt(maxCount)) * 100, 100)
 
-  // Convert TMDB paths to full URLs
-  const imageUrls = coverImages.map(img => {
-    // If already a full URL, use as-is; otherwise convert TMDB path
-    if (img.startsWith('http')) return img
-    return getPosterUrl(img, 'w185')
-  })
+  // Convert TMDB paths to full URLs, filter out empty strings
+  const processedImages = coverImages
+    .filter(img => img && img.trim() !== '')
+    .map(img => ({
+      url: img.startsWith('http') ? img : getPosterUrl(img, 'w185'),
+      isExternal: img.startsWith('http'),
+    }))
 
   return (
     <Link
@@ -43,18 +44,19 @@ export function ListCard({
     >
       {/* Cover images preview */}
       <div className="mb-3 flex gap-1">
-        {imageUrls.length > 0 ? (
-          imageUrls.slice(0, 3).map((img, i) => (
+        {processedImages.length > 0 ? (
+          processedImages.slice(0, 3).map((img, i) => (
             <div
               key={i}
               className="relative aspect-[2/3] flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800"
             >
               <Image
-                src={img}
+                src={img.url}
                 alt=""
                 fill
                 className="object-cover"
                 sizes="100px"
+                unoptimized={img.isExternal}
               />
             </div>
           ))

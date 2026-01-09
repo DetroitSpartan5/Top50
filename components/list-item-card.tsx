@@ -46,8 +46,9 @@ export function ListItemCard({
   }
 
   // Determine if cover_image is a TMDB path or a full URL
+  const isTmdbPath = item.cover_image?.startsWith('/')
   const imageUrl = item.cover_image
-    ? item.cover_image.startsWith('/')
+    ? isTmdbPath
       ? getPosterUrl(item.cover_image, 'w92')
       : item.cover_image
     : null
@@ -84,6 +85,7 @@ export function ListItemCard({
           width={46}
           height={69}
           className="rounded"
+          unoptimized={!isTmdbPath}
         />
       ) : (
         <div className="flex h-[69px] w-[46px] items-center justify-center rounded bg-gray-200 text-xs text-gray-400 dark:bg-gray-800">

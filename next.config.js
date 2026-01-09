@@ -24,8 +24,23 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '*.mzstatic.com',
-        pathname: '/**',
+        hostname: 'is2-ssl.mzstatic.com',
+        pathname: '/image/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'is3-ssl.mzstatic.com',
+        pathname: '/image/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'is4-ssl.mzstatic.com',
+        pathname: '/image/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'is5-ssl.mzstatic.com',
+        pathname: '/image/**',
       },
       {
         protocol: 'https',
@@ -36,6 +51,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 's4.anilist.co',
         pathname: '/file/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.myanimelist.net',
+        pathname: '/images/**',
       },
       {
         protocol: 'https',

@@ -240,6 +240,9 @@ function ListActivityItem({ item }: { item: any }) {
   const timeAgo = getTimeAgo(new Date(item.created_at))
   const profile = item.profile
   const template = item.template
+  // Check if cover_image is a TMDB path (starts with /) or external URL
+  const isTmdbPath = item.cover_image?.startsWith('/')
+  const imageUrl = item.cover_image ? getPosterUrl(item.cover_image, 'w92') : null
 
   return (
     <div className="flex gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-800">
@@ -267,13 +270,14 @@ function ListActivityItem({ item }: { item: any }) {
         </p>
 
         <div className="mt-2 flex items-center gap-2">
-          {item.cover_image ? (
+          {imageUrl ? (
             <Image
-              src={getPosterUrl(item.cover_image, 'w92')}
+              src={imageUrl}
               alt={item.title}
               width={32}
               height={48}
               className="rounded"
+              unoptimized={!isTmdbPath}
             />
           ) : (
             <div className="flex h-12 w-8 items-center justify-center rounded bg-gray-200 text-xs text-gray-400 dark:bg-gray-800">
@@ -293,6 +297,9 @@ function ListActivityItem({ item }: { item: any }) {
 function FollowingActivityItem({ item }: { item: any }) {
   const profile = item.profile
   const timeAgo = getTimeAgo(new Date(item.created_at))
+  // Check if poster_path is a TMDB path (starts with /) or external URL
+  const isTmdbPath = item.poster_path?.startsWith('/')
+  const imageUrl = item.poster_path ? getPosterUrl(item.poster_path, 'w92') : null
 
   return (
     <div className="flex gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50">
@@ -315,13 +322,14 @@ function FollowingActivityItem({ item }: { item: any }) {
         <p className="text-xs text-gray-400">{timeAgo}</p>
       </div>
 
-      {item.poster_path && (
+      {imageUrl && (
         <Image
-          src={getPosterUrl(item.poster_path, 'w92')}
+          src={imageUrl}
           alt={item.title}
           width={28}
           height={42}
           className="rounded"
+          unoptimized={!isTmdbPath}
         />
       )}
     </div>

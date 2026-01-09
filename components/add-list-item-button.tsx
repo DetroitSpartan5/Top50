@@ -24,12 +24,12 @@ function getTMDBType(category: string): string {
 }
 
 // Get the appropriate image URL based on category
-function getImageUrl(item: BrowseItem, category: string, size: 'small' | 'medium' = 'small'): string | null {
+function getImageUrl(item: BrowseItem, category: string, size: 'small' | 'medium' = 'small'): { url: string; isExternal: boolean } | null {
   if (!item.poster_path) return null
   if (category === 'movies' || category === 'tv') {
-    return getPosterUrl(item.poster_path, size === 'small' ? 'w92' : 'w342')
+    return { url: getPosterUrl(item.poster_path, size === 'small' ? 'w92' : 'w342'), isExternal: false }
   }
-  return item.poster_path
+  return { url: item.poster_path, isExternal: true }
 }
 
 interface Props {
@@ -296,7 +296,7 @@ export function AddListItemButton({
             {!showLoading && itemsToShow.length > 0 && (
               <div className="max-h-96 space-y-2 overflow-y-auto">
                 {itemsToShow.map((item) => {
-                  const imageUrl = getImageUrl(item, category, 'small')
+                  const image = getImageUrl(item, category, 'small')
                   return (
                     <button
                       key={item.id}
@@ -304,13 +304,14 @@ export function AddListItemButton({
                       disabled={isPending}
                       className="flex w-full items-center gap-3 rounded-md p-2 text-left hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-gray-800"
                     >
-                      {imageUrl ? (
+                      {image ? (
                         <Image
-                          src={imageUrl}
+                          src={image.url}
                           alt={item.title}
                           width={46}
                           height={69}
                           className="rounded object-cover"
+                          unoptimized={image.isExternal}
                         />
                       ) : (
                         <div className="flex h-[69px] w-[46px] items-center justify-center rounded bg-gray-200 text-xs text-gray-400 dark:bg-gray-700">
