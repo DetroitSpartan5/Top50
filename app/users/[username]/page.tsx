@@ -20,8 +20,8 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params
   return {
-    title: `${username}'s Top 50`,
-    description: `Check out ${username}'s favorite movies`,
+    title: `${username}'s Favorites`,
+    description: `Check out ${username}'s favorite movies on topofmine`,
   }
 }
 
@@ -128,7 +128,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
       <div className="mb-8">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-600 dark:bg-blue-900 dark:text-blue-400">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-2xl font-bold text-rose-600 dark:bg-rose-900 dark:text-rose-400">
               {profile.username?.[0]?.toUpperCase() || '?'}
             </div>
             <div>
@@ -144,13 +144,13 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
                 <span className="text-gray-500">{movies?.length || 0} movies</span>
                 <Link
                   href={`/users/${username}?tab=followers`}
-                  className={`hover:text-blue-600 ${activeTab === 'followers' ? 'font-semibold text-blue-600' : 'text-gray-500'}`}
+                  className={`hover:text-rose-500 ${activeTab === 'followers' ? 'font-semibold text-rose-500' : 'text-gray-500'}`}
                 >
                   {followers.length} followers
                 </Link>
                 <Link
                   href={`/users/${username}?tab=following`}
-                  className={`hover:text-blue-600 ${activeTab === 'following' ? 'font-semibold text-blue-600' : 'text-gray-500'}`}
+                  className={`hover:text-rose-500 ${activeTab === 'following' ? 'font-semibold text-rose-500' : 'text-gray-500'}`}
                 >
                   {following.length} following
                 </Link>
@@ -209,7 +209,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
           href={`/users/${username}`}
           className={`border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${
             activeTab === 'movies'
-              ? 'border-blue-600 text-blue-600'
+              ? 'border-rose-500 text-rose-500'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -219,7 +219,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
           href={`/users/${username}?tab=followers`}
           className={`border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${
             activeTab === 'followers'
-              ? 'border-blue-600 text-blue-600'
+              ? 'border-rose-500 text-rose-500'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -229,7 +229,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
           href={`/users/${username}?tab=following`}
           className={`border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${
             activeTab === 'following'
-              ? 'border-blue-600 text-blue-600'
+              ? 'border-rose-500 text-rose-500'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -239,7 +239,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
           href={`/users/${username}?tab=lists`}
           className={`border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${
             activeTab === 'lists'
-              ? 'border-blue-600 text-blue-600'
+              ? 'border-rose-500 text-rose-500'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -264,7 +264,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
                   href={`/users/${user.username}`}
                   className="flex items-center gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-600 dark:bg-blue-900 dark:text-blue-400">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 font-bold text-rose-600 dark:bg-rose-900 dark:text-rose-400">
                     {user.username?.[0]?.toUpperCase() || '?'}
                   </div>
                   <span className="font-medium">{user.username}</span>
@@ -283,7 +283,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
               {isOwner && (
                 <>
                   {' '}
-                  <Link href="/users" className="text-blue-600 hover:underline">
+                  <Link href="/users" className="text-rose-500 hover:underline">
                     Discover users
                   </Link>
                 </>
@@ -297,7 +297,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
                   href={`/users/${user.username}`}
                   className="flex items-center gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-600 dark:bg-blue-900 dark:text-blue-400">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 font-bold text-rose-600 dark:bg-rose-900 dark:text-rose-400">
                     {user.username?.[0]?.toUpperCase() || '?'}
                   </div>
                   <span className="font-medium">{user.username}</span>
@@ -328,9 +328,9 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
                   <Link
                     key={list.id}
                     href={`/lists/${list.id}`}
-                    className="rounded-lg border border-gray-200 p-4 transition-colors hover:border-blue-500 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
+                    className="rounded-lg border border-gray-200 p-4 transition-colors hover:border-rose-500 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
                   >
-                    <h3 className="font-semibold text-blue-600">
+                    <h3 className="font-semibold text-rose-500">
                       {template.display_name}
                     </h3>
                     <p className="mt-1 text-sm text-gray-500">{description}</p>
@@ -340,7 +340,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
                       </span>
                       <div className="h-2 w-20 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                         <div
-                          className="h-full bg-blue-500"
+                          className="h-full bg-rose-500"
                           style={{ width: `${(movieCount / maxCount) * 100}%` }}
                         />
                       </div>

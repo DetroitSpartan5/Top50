@@ -5,7 +5,7 @@ import type { UserMovie } from '@/types/database'
 import { MovieList } from '@/components/movie-list'
 
 export const metadata = {
-  title: 'My Top 50',
+  title: 'My Favorites',
 }
 
 export default async function Top50Page() {
@@ -37,10 +37,10 @@ export default async function Top50Page() {
 
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-rose-500 dark:text-rose-400">
             Core List
           </div>
-          <h1 className="text-3xl font-bold">My Top 50</h1>
+          <h1 className="text-3xl font-bold">My Favorites</h1>
           <p className="mt-1 text-gray-500">
             Your all-time favorites, definitively ranked
           </p>

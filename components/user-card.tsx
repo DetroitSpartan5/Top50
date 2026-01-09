@@ -82,11 +82,11 @@ export function UserCard({
         <div className="flex items-start justify-between">
           <Link href={`/users/${profile.username}`} className="flex-grow">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-600 dark:bg-blue-900 dark:text-blue-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-lg font-bold text-rose-600 dark:bg-rose-900 dark:text-rose-400">
                 {profile.username?.[0]?.toUpperCase() || '?'}
               </div>
               <div>
-                <h3 className="font-semibold group-hover:text-blue-600">
+                <h3 className="font-semibold group-hover:text-rose-500">
                   {profile.username || 'Unknown'}
                   {isCurrentUser && (
                     <span className="ml-2 text-xs font-normal text-gray-400">

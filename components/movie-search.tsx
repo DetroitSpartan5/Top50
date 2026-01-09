@@ -74,7 +74,7 @@ export function MovieSearch({ rank, onClose }: MovieSearchProps) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search for a movie..."
           autoFocus
-          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
+          className="mb-4 w-full rounded-md border border-gray-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 dark:border-gray-700 dark:bg-gray-800"
         />
 
         <div className="max-h-80 overflow-y-auto">

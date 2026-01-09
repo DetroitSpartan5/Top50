@@ -57,7 +57,7 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900"
+            className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 dark:border-gray-700 dark:bg-gray-900"
           />
         </div>
 
@@ -74,14 +74,14 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900"
+            className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 dark:border-gray-700 dark:bg-gray-900"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+          className="w-full rounded-md bg-rose-500 px-4 py-2 text-white hover:bg-rose-600 disabled:opacity-50"
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
@@ -89,7 +89,7 @@ export default function LoginPage() {
 
       <p className="mt-4 text-center text-gray-600 dark:text-gray-400">
         Don&apos;t have an account?{' '}
-        <Link href="/signup" className="text-blue-600 hover:underline">
+        <Link href="/signup" className="text-rose-500 hover:underline">
           Sign up
         </Link>
       </p>

@@ -37,11 +37,11 @@ const MILESTONE_MESSAGES: Record<number, string> = {
   10: "Double digits! Your list is taking shape",
   15: "A quarter of the way there",
   20: "Solid foundation building",
-  25: "Halfway to 50!",
+  25: "Halfway there!",
   30: "Past the halfway mark",
   40: "The home stretch",
   45: "Almost there...",
-  50: "You did it! Your Top 50 is complete",
+  50: "You did it! Your collection is complete",
 }
 
 export function OnboardingFlow({ existingMovies }: OnboardingFlowProps) {
@@ -160,7 +160,7 @@ export function OnboardingFlow({ existingMovies }: OnboardingFlowProps) {
     <div className="pb-32">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Build Your Top 50</h1>
+        <h1 className="text-3xl font-bold">Build Your Collection</h1>
         <p className="mt-2 text-gray-500">
           Tap movies to add them. These are the top-rated films of all time.
         </p>
@@ -177,7 +177,7 @@ export function OnboardingFlow({ existingMovies }: OnboardingFlowProps) {
             className={cn(
               "rounded-full px-4 py-2 text-sm font-medium transition-colors",
               !showSearch
-                ? "bg-blue-600 text-white"
+                ? "bg-rose-500 text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
             )}
           >
@@ -188,7 +188,7 @@ export function OnboardingFlow({ existingMovies }: OnboardingFlowProps) {
             className={cn(
               "rounded-full px-4 py-2 text-sm font-medium transition-colors",
               showSearch
-                ? "bg-blue-600 text-white"
+                ? "bg-rose-500 text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
             )}
           >
@@ -203,7 +203,7 @@ export function OnboardingFlow({ existingMovies }: OnboardingFlowProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search for any movie..."
             autoFocus
-            className="mt-4 w-full max-w-md rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
+            className="mt-4 w-full max-w-md rounded-lg border border-gray-300 px-4 py-3 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 dark:border-gray-700 dark:bg-gray-800"
           />
         )}
       </div>
@@ -228,7 +228,7 @@ export function OnboardingFlow({ existingMovies }: OnboardingFlowProps) {
                 isInList
                   ? "ring-4 ring-green-500 ring-offset-2 dark:ring-offset-gray-900"
                   : isSelected
-                    ? "ring-4 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900"
+                    ? "ring-4 ring-rose-500 ring-offset-2 dark:ring-offset-gray-900"
                     : "hover:scale-105 hover:ring-2 hover:ring-gray-300",
                 !isInList && !isSelected && currentCount >= maxSelectable && "opacity-50"
               )}
@@ -256,7 +256,7 @@ export function OnboardingFlow({ existingMovies }: OnboardingFlowProps) {
 
               {/* New selection badge (blue) */}
               {!isInList && isSelected && (
-                <div className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white shadow-lg">
+                <div className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-sm font-bold text-white shadow-lg">
                   +{selectionIndex}
                 </div>
               )}
@@ -323,7 +323,7 @@ export function OnboardingFlow({ existingMovies }: OnboardingFlowProps) {
               className={cn(
                 "rounded-lg px-6 py-3 font-medium text-white transition-colors",
                 currentCount > 0
-                  ? "bg-blue-600 hover:bg-blue-700"
+                  ? "bg-rose-500 hover:bg-rose-600"
                   : "cursor-not-allowed bg-gray-300 dark:bg-gray-700"
               )}
             >

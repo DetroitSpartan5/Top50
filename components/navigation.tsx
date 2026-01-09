@@ -21,8 +21,8 @@ export async function Navigation() {
   return (
     <header className="border-b border-gray-200 dark:border-gray-800">
       <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-        <Link href="/" className="text-xl font-bold">
-          Top 50 Movies
+        <Link href="/" className="logo-wordmark text-xl text-rose-500">
+          topofmine
         </Link>
 
         <div className="flex items-center gap-4">
@@ -49,7 +49,7 @@ export async function Navigation() {
               {username && (
                 <Link
                   href={`/users/${username}`}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-600 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-400 dark:hover:bg-blue-800"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 font-bold text-rose-600 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:hover:bg-rose-900/50"
                   title="My Profile"
                 >
                   {username[0].toUpperCase()}
@@ -66,7 +66,7 @@ export async function Navigation() {
               </Link>
               <Link
                 href="/signup"
-                className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                className="rounded-md bg-rose-500 px-4 py-2 text-white hover:bg-rose-600"
               >
                 Sign Up
               </Link>

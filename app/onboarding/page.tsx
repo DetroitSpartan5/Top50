@@ -6,7 +6,7 @@ import type { UserMovie } from '@/types/database'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'Build Your Top 50',
+  title: 'Build Your Collection',
 }
 
 export default async function OnboardingPage() {

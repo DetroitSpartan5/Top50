@@ -185,7 +185,7 @@ export default async function FeedPage() {
         {followingIds.length === 0 ? (
           <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center dark:border-gray-700">
             <p className="mb-2 text-gray-500">You&apos;re not following anyone yet.</p>
-            <Link href="/users" className="text-blue-600 hover:underline">
+            <Link href="/users" className="text-rose-500 hover:underline">
               Discover users to follow
             </Link>
           </div>
@@ -219,7 +219,7 @@ function TrendingListCard({
   )
 
   return (
-    <div className="rounded-lg border border-gray-200 p-4 transition-colors hover:border-blue-400 dark:border-gray-800 dark:hover:border-blue-600">
+    <div className="rounded-lg border border-gray-200 p-4 transition-colors hover:border-rose-400 dark:border-gray-800 dark:hover:border-rose-600">
       <h3 className="font-semibold">{template.display_name}</h3>
       <p className="mt-1 text-sm text-gray-500">{description}</p>
       <div className="mt-3 flex items-center justify-between">
@@ -244,7 +244,7 @@ function ListActivityItem({ item }: { item: any }) {
   return (
     <div className="flex gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-800">
       <Link href={`/users/${profile?.username}`}>
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600 dark:bg-blue-900 dark:text-blue-400">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-rose-100 text-sm font-bold text-rose-500 dark:bg-rose-900 dark:text-rose-400">
           {profile?.username?.[0]?.toUpperCase() || '?'}
         </div>
       </Link>
@@ -253,14 +253,14 @@ function ListActivityItem({ item }: { item: any }) {
         <p className="text-sm">
           <Link
             href={`/users/${profile?.username}`}
-            className="font-semibold hover:text-blue-600"
+            className="font-semibold hover:text-rose-500"
           >
             {profile?.username || 'Someone'}
           </Link>{' '}
           added to{' '}
           <Link
             href={`/lists/${item.userListId}`}
-            className="font-medium text-blue-600 hover:underline"
+            className="font-medium text-rose-500 hover:underline"
           >
             {template?.display_name || 'a list'}
           </Link>
@@ -297,7 +297,7 @@ function FollowingActivityItem({ item }: { item: any }) {
   return (
     <div className="flex gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50">
       <Link href={`/users/${profile?.username}`}>
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600 dark:bg-blue-900 dark:text-blue-400">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-rose-100 text-xs font-bold text-rose-500 dark:bg-rose-900 dark:text-rose-400">
           {profile?.username?.[0]?.toUpperCase() || '?'}
         </div>
       </Link>
@@ -306,7 +306,7 @@ function FollowingActivityItem({ item }: { item: any }) {
         <p className="text-sm">
           <Link
             href={`/users/${profile?.username}`}
-            className="font-semibold hover:text-blue-600"
+            className="font-semibold hover:text-rose-500"
           >
             {profile?.username || 'Unknown'}
           </Link>{' '}

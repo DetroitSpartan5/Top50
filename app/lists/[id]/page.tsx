@@ -105,7 +105,7 @@ export default async function ListPage({ params }: Props) {
               {!isOwner && (
                 <Link
                   href={`/users/${profile.username}`}
-                  className="text-blue-600 hover:underline"
+                  className="text-rose-500 hover:underline"
                 >
                   @{profile.username}
                 </Link>
@@ -139,7 +139,7 @@ export default async function ListPage({ params }: Props) {
         <div className="mt-6 flex gap-3">
           <Link
             href={`/lists/${id}/browse`}
-            className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            className="rounded-md bg-rose-500 px-4 py-2 text-white hover:bg-rose-600"
           >
             Browse & Add Movies
           </Link>

@@ -1,18 +1,57 @@
 @import "tailwindcss";
 
 :root {
-  --foreground-rgb: 0, 0, 0;
+  --foreground-rgb: 15, 23, 42;
   --background-rgb: 255, 255, 255;
+
+  /* Brand colors - warm coral/rose accent */
+  --brand-primary: 244, 63, 94;
+  --brand-secondary: 251, 113, 133;
+  --brand-dark: 225, 29, 72;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-rgb: 10, 10, 10;
+    --foreground-rgb: 248, 250, 252;
+    --background-rgb: 15, 23, 42;
   }
 }
 
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Logo wordmark style */
+.logo-wordmark {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Brand gradient for special elements */
+.brand-gradient {
+  background: linear-gradient(135deg, rgb(var(--brand-primary)) 0%, rgb(var(--brand-secondary)) 100%);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(203, 213, 225);
+  border-radius: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background: rgb(71, 85, 105);
+  }
 }

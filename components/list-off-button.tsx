@@ -27,7 +27,7 @@ export function ListOffButton({ templateId }: Props) {
     <button
       onClick={handleListOff}
       disabled={isPending}
-      className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+      className="rounded-md bg-rose-500 px-4 py-2 text-white hover:bg-rose-600 disabled:opacity-50"
     >
       {isPending ? 'Creating...' : 'Make My Own'}
     </button>

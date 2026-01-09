@@ -33,7 +33,7 @@ export function EditBio({ currentBio }: EditBioProps) {
           placeholder="Write a short bio..."
           maxLength={160}
           rows={2}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 dark:border-gray-700 dark:bg-gray-800"
           autoFocus
         />
         <div className="mt-2 flex items-center justify-between">
@@ -49,7 +49,7 @@ export function EditBio({ currentBio }: EditBioProps) {
             <button
               onClick={handleSave}
               disabled={isPending}
-              className="rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-md bg-rose-500 px-3 py-1 text-sm text-white hover:bg-rose-600 disabled:opacity-50"
             >
               {isPending ? 'Saving...' : 'Save'}
             </button>
@@ -66,7 +66,7 @@ export function EditBio({ currentBio }: EditBioProps) {
           {currentBio}
           <button
             onClick={() => setIsEditing(true)}
-            className="ml-2 text-sm text-blue-600 opacity-0 transition-opacity hover:underline group-hover:opacity-100"
+            className="ml-2 text-sm text-rose-500 opacity-0 transition-opacity hover:underline group-hover:opacity-100"
           >
             Edit
           </button>
@@ -74,7 +74,7 @@ export function EditBio({ currentBio }: EditBioProps) {
       ) : (
         <button
           onClick={() => setIsEditing(true)}
-          className="text-sm text-gray-400 hover:text-blue-600"
+          className="text-sm text-gray-400 hover:text-rose-500"
         >
           + Add a bio
         </button>

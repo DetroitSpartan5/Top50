@@ -27,7 +27,7 @@ export function StartListButton({ templateId }: Props) {
     <button
       onClick={handleClick}
       disabled={isPending}
-      className="text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
+      className="text-sm font-medium text-rose-500 hover:underline disabled:opacity-50"
     >
       {isPending ? 'Creating...' : 'Start yours →'}
     </button>

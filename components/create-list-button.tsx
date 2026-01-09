@@ -125,8 +125,8 @@ export function CreateListButton({ variant = 'default' }: Props) {
 
   const buttonClasses = {
     default: 'rounded-md border border-gray-300 px-4 py-2 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800',
-    primary: 'rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700',
-    ghost: 'flex flex-col items-center gap-2 text-gray-400 hover:text-blue-500',
+    primary: 'rounded-lg bg-rose-500 px-6 py-3 font-medium text-white hover:bg-rose-600',
+    ghost: 'flex flex-col items-center gap-2 text-gray-400 hover:text-rose-500',
   }
 
   return (
@@ -256,7 +256,7 @@ export function CreateListButton({ variant = 'default' }: Props) {
                       onClick={() => setCount(c.value)}
                       className={`flex-1 rounded-md border px-3 py-2 text-sm ${
                         count === c.value
-                          ? 'border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-900/20'
+                          ? 'border-rose-500 bg-rose-50 text-rose-600 dark:bg-rose-900/20'
                           : 'border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800'
                       }`}
                     >
@@ -288,7 +288,7 @@ export function CreateListButton({ variant = 'default' }: Props) {
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 rounded-md bg-rose-500 px-4 py-2 text-white hover:bg-rose-600 disabled:opacity-50"
                 >
                   {isPending ? 'Creating...' : 'Create List'}
                 </button>

@@ -88,7 +88,7 @@ export default function SignupPage() {
             onChange={(e) => setUsername(e.target.value)}
             required
             placeholder="cooluser123"
-            className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900"
+            className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 dark:border-gray-700 dark:bg-gray-900"
           />
           <p className="mt-1 text-sm text-gray-500">
             3-20 characters, letters, numbers, underscores only
@@ -108,7 +108,7 @@ export default function SignupPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900"
+            className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 dark:border-gray-700 dark:bg-gray-900"
           />
         </div>
 
@@ -126,7 +126,7 @@ export default function SignupPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900"
+            className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 dark:border-gray-700 dark:bg-gray-900"
           />
           <p className="mt-1 text-sm text-gray-500">Minimum 6 characters</p>
         </div>
@@ -134,7 +134,7 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+          className="w-full rounded-md bg-rose-500 px-4 py-2 text-white hover:bg-rose-600 disabled:opacity-50"
         >
           {loading ? 'Creating account...' : 'Create Account'}
         </button>
@@ -142,7 +142,7 @@ export default function SignupPage() {
 
       <p className="mt-4 text-center text-gray-600 dark:text-gray-400">
         Already have an account?{' '}
-        <Link href="/login" className="text-blue-600 hover:underline">
+        <Link href="/login" className="text-rose-500 hover:underline">
           Login
         </Link>
       </p>

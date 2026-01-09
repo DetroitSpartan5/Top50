@@ -12,7 +12,7 @@ export function SignupCTA({ variant, username }: SignupCTAProps) {
     return (
       <Link
         href="/signup"
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+        className="rounded-md bg-rose-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-600"
       >
         Sign up to follow
       </Link>
@@ -21,16 +21,16 @@ export function SignupCTA({ variant, username }: SignupCTAProps) {
 
   if (variant === 'compare') {
     return (
-      <div className="rounded-lg border border-dashed border-blue-300 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-        <p className="text-sm text-blue-700 dark:text-blue-300">
+      <div className="rounded-lg border border-dashed border-rose-300 bg-rose-50 p-4 dark:border-rose-800 dark:bg-rose-900/20">
+        <p className="text-sm text-rose-700 dark:text-rose-300">
           <span className="font-medium">Want to see how your taste compares?</span>
           {' '}Sign up to discover movies in common with {username}.
         </p>
         <Link
           href="/signup"
-          className="mt-3 inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+          className="mt-3 inline-block rounded-md bg-rose-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-600"
         >
-          Create your Top 50
+          Start your list
         </Link>
       </div>
     )
@@ -41,17 +41,17 @@ export function SignupCTA({ variant, username }: SignupCTAProps) {
       <div className="mt-8 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800/50">
         <h3 className="text-xl font-bold">Like what you see?</h3>
         <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Create your own Top 50 and share it with friends
+          Create your own list and share it with friends
         </p>
         <Link
           href="/signup"
-          className="mt-4 inline-block rounded-md bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700"
+          className="mt-4 inline-block rounded-md bg-rose-500 px-6 py-3 font-medium text-white transition-colors hover:bg-rose-600"
         >
-          Create Your Top 50
+          Create Your List
         </Link>
         <p className="mt-3 text-sm text-gray-500">
           Already have an account?{' '}
-          <Link href="/login" className="text-blue-600 hover:underline">
+          <Link href="/login" className="text-rose-500 hover:underline">
             Log in
           </Link>
         </p>
@@ -63,7 +63,7 @@ export function SignupCTA({ variant, username }: SignupCTAProps) {
   return (
     <Link
       href="/signup"
-      className="text-blue-600 hover:underline"
+      className="text-rose-500 hover:underline"
     >
       Sign up
     </Link>

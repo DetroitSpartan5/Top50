@@ -66,13 +66,13 @@ export function MovieList({ movies: initialMovies, isOwner }: MovieListProps) {
     return (
       <div className="rounded-lg border border-dashed border-gray-300 p-12 text-center dark:border-gray-700">
         <div className="mb-2 text-5xl">🎬</div>
-        <h2 className="mb-2 text-xl font-semibold">Start Your Top 50</h2>
+        <h2 className="mb-2 text-xl font-semibold">Start Your Collection</h2>
         <p className="mb-6 text-gray-500">
           Pick from the best movies ever made, or search for your favorites.
         </p>
         <Link
           href="/onboarding"
-          className="inline-block rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
+          className="inline-block rounded-lg bg-rose-500 px-6 py-3 font-medium text-white hover:bg-rose-600"
         >
           Let&apos;s Go
         </Link>

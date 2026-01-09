@@ -128,14 +128,14 @@ function SuggestedListCard({ list }: { list: SuggestedList }) {
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 p-4 transition-colors hover:border-blue-400 dark:border-gray-800 dark:hover:border-blue-600">
+    <div className="rounded-lg border border-gray-200 p-4 transition-colors hover:border-rose-400 dark:border-gray-800 dark:hover:border-rose-600">
       <h3 className="font-semibold">{list.name}</h3>
       <p className="mt-1 text-sm text-gray-500">{list.description}</p>
       <div className="mt-3">
         <button
           onClick={handleCreate}
           disabled={isPending}
-          className="text-sm font-medium text-blue-600 hover:underline disabled:opacity-50"
+          className="text-sm font-medium text-rose-500 hover:underline disabled:opacity-50"
         >
           {isPending ? 'Creating...' : 'Create this list →'}
         </button>

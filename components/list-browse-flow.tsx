@@ -219,7 +219,7 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
             className={cn(
               "rounded-full px-4 py-2 text-sm font-medium transition-colors",
               !showSearch
-                ? "bg-blue-600 text-white"
+                ? "bg-rose-500 text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
             )}
           >
@@ -230,7 +230,7 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
             className={cn(
               "rounded-full px-4 py-2 text-sm font-medium transition-colors",
               showSearch
-                ? "bg-blue-600 text-white"
+                ? "bg-rose-500 text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
             )}
           >
@@ -245,7 +245,7 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search for any movie..."
             autoFocus
-            className="mt-4 w-full max-w-md rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
+            className="mt-4 w-full max-w-md rounded-lg border border-gray-300 px-4 py-3 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 dark:border-gray-700 dark:bg-gray-800"
           />
         )}
       </div>
@@ -270,7 +270,7 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
                 isInList
                   ? "ring-4 ring-green-500 ring-offset-2 dark:ring-offset-gray-900"
                   : isSelected
-                    ? "ring-4 ring-blue-500 ring-offset-2 dark:ring-offset-gray-900"
+                    ? "ring-4 ring-rose-500 ring-offset-2 dark:ring-offset-gray-900"
                     : "hover:scale-105 hover:ring-2 hover:ring-gray-300",
                 !isInList && !isSelected && currentCount >= maxSelectable && "opacity-50"
               )}
@@ -298,7 +298,7 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
 
               {/* New selection badge (blue) */}
               {!isInList && isSelected && (
-                <div className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white shadow-lg">
+                <div className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-sm font-bold text-white shadow-lg">
                   +{selectionIndex}
                 </div>
               )}
@@ -363,7 +363,7 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
               className={cn(
                 "rounded-lg px-6 py-3 font-medium text-white transition-colors",
                 currentCount > 0
-                  ? "bg-blue-600 hover:bg-blue-700"
+                  ? "bg-rose-500 hover:bg-rose-600"
                   : "cursor-not-allowed bg-gray-300 dark:bg-gray-700"
               )}
             >

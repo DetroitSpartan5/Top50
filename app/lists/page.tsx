@@ -37,7 +37,7 @@ export default async function ListsPage() {
         <div>
           <h1 className="text-3xl font-bold">My Lists</h1>
           <p className="mt-1 text-gray-500">
-            Create custom lists beyond your Top 50
+            Create custom lists beyond your favorites
           </p>
         </div>
         <CreateListButton />
@@ -68,9 +68,9 @@ export default async function ListsPage() {
               <Link
                 key={list.id}
                 href={`/lists/${list.id}`}
-                className="rounded-lg border border-gray-200 p-6 transition-colors hover:border-blue-500 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
+                className="rounded-lg border border-gray-200 p-6 transition-colors hover:border-rose-500 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
               >
-                <h3 className="font-semibold text-blue-600">
+                <h3 className="font-semibold text-rose-500">
                   {template.display_name}
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">{description}</p>
@@ -80,7 +80,7 @@ export default async function ListsPage() {
                   </span>
                   <div className="h-2 w-24 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                     <div
-                      className="h-full bg-blue-500"
+                      className="h-full bg-rose-500"
                       style={{ width: `${(movieCount / maxCount) * 100}%` }}
                     />
                   </div>

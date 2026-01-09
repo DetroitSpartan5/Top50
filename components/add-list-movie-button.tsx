@@ -165,7 +165,7 @@ export function AddListMovieButton({
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+        className="rounded-md bg-rose-500 px-4 py-2 text-white hover:bg-rose-600"
       >
         Add Movie
       </button>

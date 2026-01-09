@@ -26,7 +26,7 @@ export default async function MyListPage() {
   return (
     <div>
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">My Top 50</h1>
+        <h1 className="text-3xl font-bold">My Favorites</h1>
         <span className="text-gray-500">
           {movies?.length || 0} / 50 movies
         </span>

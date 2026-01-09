@@ -64,26 +64,26 @@ export default async function MyListsPage() {
       <div className="mb-8">
         <Link
           href="/my-lists/top-50"
-          className="block rounded-xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 transition-all hover:border-blue-400 hover:shadow-md dark:border-blue-900 dark:from-blue-950/50 dark:to-indigo-950/50 dark:hover:border-blue-700"
+          className="block rounded-xl border-2 border-rose-200 bg-gradient-to-r from-rose-50 to-pink-50 p-6 transition-all hover:border-rose-400 hover:shadow-md dark:border-rose-900 dark:from-rose-950/50 dark:to-pink-950/50 dark:hover:border-rose-700"
         >
           <div className="flex items-center justify-between">
             <div>
-              <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-rose-500 dark:text-rose-400">
                 Core List
               </div>
-              <h2 className="text-2xl font-bold">My Top 50</h2>
+              <h2 className="text-2xl font-bold">My Favorites</h2>
               <p className="mt-1 text-gray-600 dark:text-gray-400">
                 Your all-time favorite movies, ranked
               </p>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold text-blue-600">
+              <div className="text-3xl font-bold text-rose-500">
                 {top50Count || 0}
                 <span className="text-lg font-normal text-gray-400">/50</span>
               </div>
-              <div className="mt-1 h-2 w-32 overflow-hidden rounded-full bg-blue-200 dark:bg-blue-900">
+              <div className="mt-1 h-2 w-32 overflow-hidden rounded-full bg-rose-200 dark:bg-rose-900">
                 <div
-                  className="h-full bg-blue-600"
+                  className="h-full bg-rose-500"
                   style={{ width: `${((top50Count || 0) / 50) * 100}%` }}
                 />
               </div>
@@ -108,7 +108,7 @@ export default async function MyListsPage() {
                       {movie.rank}
                     </div>
                   )}
-                  <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+                  <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-xs font-bold text-white">
                     {movie.rank}
                   </div>
                 </div>
@@ -122,7 +122,7 @@ export default async function MyListsPage() {
           )}
 
           {!hasTop50 && (
-            <div className="mt-4 text-sm text-blue-600 dark:text-blue-400">
+            <div className="mt-4 text-sm text-rose-500 dark:text-rose-400">
               Start building your definitive movie ranking →
             </div>
           )}
@@ -158,7 +158,7 @@ export default async function MyListsPage() {
                 <Link
                   key={list.id}
                   href={`/lists/${list.id}`}
-                  className="rounded-lg border border-gray-200 p-5 transition-colors hover:border-blue-400 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-blue-700 dark:hover:bg-gray-800/50"
+                  className="rounded-lg border border-gray-200 p-5 transition-colors hover:border-rose-400 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-rose-700 dark:hover:bg-gray-800/50"
                 >
                   <h3 className="font-semibold">{template.display_name}</h3>
                   <p className="mt-1 text-sm text-gray-500">{description}</p>
@@ -168,7 +168,7 @@ export default async function MyListsPage() {
                     </span>
                     <div className="h-2 w-20 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                       <div
-                        className="h-full bg-blue-500"
+                        className="h-full bg-rose-500"
                         style={{ width: `${(movieCount / maxCount) * 100}%` }}
                       />
                     </div>
@@ -178,14 +178,14 @@ export default async function MyListsPage() {
             })}
 
             {/* Create new list card */}
-            <div className="flex min-h-[120px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-5 transition-colors hover:border-blue-400 dark:border-gray-700 dark:hover:border-blue-600">
+            <div className="flex min-h-[120px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-5 transition-colors hover:border-rose-400 dark:border-gray-700 dark:hover:border-rose-600">
               <CreateListButton variant="ghost" />
             </div>
           </div>
         ) : (
           <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center dark:border-gray-700">
             <p className="mb-4 text-gray-500">
-              Beyond your Top 50, create focused lists for any genre, decade, or mood
+              Beyond your favorites, create focused lists for any genre, decade, or mood
             </p>
             <CreateListButton variant="primary" />
           </div>

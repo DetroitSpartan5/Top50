@@ -14,14 +14,14 @@ export function ShareButton({ username, movieCount }: ShareButtonProps) {
     ? `${window.location.origin}/users/${username}`
     : `/users/${username}`
 
-  const shareText = `Check out ${username}'s Top ${movieCount} movies on Top 50!`
+  const shareText = `Check out ${username}'s favorites on topofmine`
 
   async function handleShare() {
     // Try native share first (mobile)
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${username}'s Top 50`,
+          title: `${username} on topofmine`,
           text: shareText,
           url: shareUrl,
         })
