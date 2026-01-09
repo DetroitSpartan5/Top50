@@ -41,10 +41,10 @@ export async function Navigation() {
                 Discover
               </Link>
               <Link
-                href="/my-list"
+                href="/my-lists"
                 className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
               >
-                My List
+                My Lists
               </Link>
               {username && (
                 <Link

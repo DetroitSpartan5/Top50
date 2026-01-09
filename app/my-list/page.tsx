@@ -33,17 +33,6 @@ export default async function MyListPage() {
       </div>
 
       <MovieList movies={(movies as UserMovie[]) || []} isOwner={true} />
-
-      <div className="mt-12 border-t border-gray-200 pt-8 dark:border-gray-800">
-        <form action="/auth/signout" method="post">
-          <button
-            type="submit"
-            className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-          >
-            Sign out
-          </button>
-        </form>
-      </div>
     </div>
   )
 }

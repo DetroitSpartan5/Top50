@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { UserCard } from '@/components/user-card'
+import { UserSearch } from '@/components/user-search'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -9,7 +10,12 @@ export const metadata: Metadata = {
   description: 'Discover users and their movie lists',
 }
 
-export default async function UsersPage() {
+interface Props {
+  searchParams: Promise<{ q?: string }>
+}
+
+export default async function UsersPage({ searchParams }: Props) {
+  const { q: searchQuery } = await searchParams
   const supabase = await createClient()
 
   // Get current user
@@ -73,8 +79,15 @@ export default async function UsersPage() {
     }
   })
 
+  // Filter by search query if provided
+  const filteredProfiles = searchQuery
+    ? processedProfiles?.filter((p) =>
+        p.username?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : processedProfiles
+
   // Sort: users with overlap first, then by movie count
-  const sortedProfiles = processedProfiles?.sort((a, b) => {
+  const sortedProfiles = filteredProfiles?.sort((a, b) => {
     // Current user always last
     if (a.id === currentUser?.id) return 1
     if (b.id === currentUser?.id) return -1
@@ -91,10 +104,15 @@ export default async function UsersPage() {
         <p className="mt-2 text-gray-500">
           Find people with similar taste and see what they&apos;re watching
         </p>
+        <div className="mt-4 max-w-md">
+          <UserSearch />
+        </div>
       </div>
 
       {!sortedProfiles || sortedProfiles.length === 0 ? (
-        <p className="text-gray-500">No users yet. Be the first to sign up!</p>
+        <p className="text-gray-500">
+          {searchQuery ? `No users found matching "${searchQuery}"` : 'No users yet. Be the first to sign up!'}
+        </p>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {sortedProfiles.map((profile) => (
