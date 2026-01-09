@@ -1,13 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { UserCard } from '@/components/user-card'
 import { UserSearch } from '@/components/user-search'
+import type { ListCategory } from '@/lib/categories'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Discover',
-  description: 'Discover users and their movie lists',
+  description: 'Discover users and their lists',
 }
 
 interface Props {
@@ -29,28 +30,51 @@ export default async function UsersPage({ searchParams }: Props) {
     .select('*')
     .order('created_at', { ascending: false })
 
-  // Get all movies grouped by user
-  const { data: allMovies } = await supabase
-    .from('user_movies')
-    .select('id, user_id, tmdb_id, title, poster_path, rank')
-    .order('rank', { ascending: true })
+  // Get all user lists with their templates and top item
+  const { data: allLists } = await supabase
+    .from('user_lists')
+    .select(`
+      id,
+      user_id,
+      list_templates (category),
+      list_items (id, title, cover_image, rank)
+    `)
+    .order('created_at', { ascending: false })
 
-  // Group movies by user_id
-  const moviesByUser = new Map<string, typeof allMovies>()
-  allMovies?.forEach((movie) => {
-    const existing = moviesByUser.get(movie.user_id) || []
-    existing.push(movie)
-    moviesByUser.set(movie.user_id, existing)
+  // Group lists by user and extract top items
+  const userStats = new Map<string, {
+    listCount: number
+    categories: Set<ListCategory>
+    topItems: Array<{ id: string; title: string; cover_image: string | null; category: ListCategory }>
+  }>()
+
+  allLists?.forEach((list) => {
+    const userId = list.user_id
+    const category = (list.list_templates as any)?.category as ListCategory
+    const items = ((list.list_items as any[]) || []).sort((a, b) => a.rank - b.rank)
+
+    if (!userStats.has(userId)) {
+      userStats.set(userId, { listCount: 0, categories: new Set(), topItems: [] })
+    }
+
+    const stats = userStats.get(userId)!
+    stats.listCount++
+    if (category) {
+      stats.categories.add(category)
+      // Add top items from this list (up to 2 per list, prioritizing variety)
+      const itemsToAdd = items.slice(0, 2)
+      for (const item of itemsToAdd) {
+        if (stats.topItems.length < 5 && item.cover_image) {
+          stats.topItems.push({
+            id: item.id,
+            title: item.title,
+            cover_image: item.cover_image,
+            category,
+          })
+        }
+      }
+    }
   })
-
-  // Get current user's movie tmdb_ids for overlap calculation
-  let currentUserMovieIds: Set<number> = new Set()
-  if (currentUser) {
-    const myMovies = moviesByUser.get(currentUser.id) || []
-    currentUserMovieIds = new Set(
-      myMovies.map((m) => m.tmdb_id).filter(Boolean) as number[]
-    )
-  }
 
   // Get who current user is following
   let followingIds: string[] = []
@@ -63,19 +87,15 @@ export default async function UsersPage({ searchParams }: Props) {
     followingIds = follows?.map((f) => f.following_id) || []
   }
 
-  // Process profiles to add movies and overlap count
+  // Process profiles with list stats
   const processedProfiles = profiles?.map((profile) => {
-    const userMovies = moviesByUser.get(profile.id) || []
-    const topMovies = userMovies.slice(0, 5)
-    const overlapCount = userMovies.filter(
-      (m) => m.tmdb_id && currentUserMovieIds.has(m.tmdb_id)
-    ).length
+    const stats = userStats.get(profile.id) || { listCount: 0, categories: new Set(), topItems: [] }
 
     return {
       ...profile,
-      topMovies,
-      movieCount: userMovies.length,
-      overlapCount,
+      listCount: stats.listCount,
+      categories: Array.from(stats.categories),
+      topItems: stats.topItems.slice(0, 5), // Show up to 5 top items
     }
   })
 
@@ -86,15 +106,15 @@ export default async function UsersPage({ searchParams }: Props) {
       )
     : processedProfiles
 
-  // Sort: users with overlap first, then by movie count
+  // Sort: by list count, then by category variety
   const sortedProfiles = filteredProfiles?.sort((a, b) => {
     // Current user always last
     if (a.id === currentUser?.id) return 1
     if (b.id === currentUser?.id) return -1
-    // Then by overlap
-    if (b.overlapCount !== a.overlapCount) return b.overlapCount - a.overlapCount
-    // Then by movie count
-    return b.movieCount - a.movieCount
+    // Then by list count
+    if (b.listCount !== a.listCount) return b.listCount - a.listCount
+    // Then by category variety
+    return b.categories.length - a.categories.length
   })
 
   return (
@@ -102,7 +122,7 @@ export default async function UsersPage({ searchParams }: Props) {
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Discover</h1>
         <p className="mt-2 text-gray-500">
-          Find people with similar taste and see what they&apos;re watching
+          Find people and see what they&apos;re ranking
         </p>
         <div className="mt-4 max-w-md">
           <UserSearch />
@@ -123,9 +143,9 @@ export default async function UsersPage({ searchParams }: Props) {
                 username: profile.username,
                 avatar_url: profile.avatar_url,
                 bio: profile.bio,
-                movie_count: profile.movieCount,
-                top_movies: profile.topMovies,
-                overlap_count: profile.overlapCount,
+                listCount: profile.listCount,
+                categories: profile.categories,
+                topItems: profile.topItems,
               }}
               isFollowing={followingIds.includes(profile.id)}
               isCurrentUser={currentUser?.id === profile.id}

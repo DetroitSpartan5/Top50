@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { CATEGORY_LIST } from '@/lib/categories'
+import { CategoryGrid } from '@/components/category-grid'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -10,25 +12,28 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <h1 className="logo-wordmark mb-2 text-6xl text-rose-500">topofmine</h1>
-      <p className="mb-8 max-w-xl text-xl text-gray-600 dark:text-gray-400">
-        Curate and share your favorite movies.
+      <p className="mb-12 max-w-xl text-xl text-gray-600 dark:text-gray-400">
+        Curate and share your favorites.
         <br />
         <span className="text-gray-500">Discover what others love.</span>
       </p>
 
+      {/* Category Grid */}
+      <CategoryGrid categories={CATEGORY_LIST} maxVisible={8} />
+
       {user ? (
         <div className="flex gap-4">
           <Link
-            href="/my-list"
+            href="/my-lists"
             className="rounded-lg bg-rose-500 px-6 py-3 text-lg font-medium text-white transition-colors hover:bg-rose-600"
           >
-            Go to My List
+            My Lists
           </Link>
           <Link
             href="/users"
             className="rounded-lg border border-gray-300 px-6 py-3 text-lg font-medium transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
           >
-            Discover
+            Discover People
           </Link>
         </div>
       ) : (

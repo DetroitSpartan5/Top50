@@ -16,7 +16,19 @@ export const metadata: Metadata = {
     default: 'topofmine',
     template: '%s | topofmine',
   },
-  description: 'Curate and share your favorite movies with the world',
+  description: 'Rank your favorites. See how others compare. Movies, TV, books, games.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://topofmine.com'),
+  openGraph: {
+    type: 'website',
+    siteName: 'topofmine',
+    title: 'topofmine - Rank Your Favorites',
+    description: 'Rank your favorites. See how others compare. Movies, TV, books, games.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'topofmine - Rank Your Favorites',
+    description: 'Rank your favorites. See how others compare. Movies, TV, books, games.',
+  },
 }
 
 export default function RootLayout({

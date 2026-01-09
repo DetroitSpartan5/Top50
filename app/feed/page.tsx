@@ -48,11 +48,11 @@ export default async function FeedPage() {
 
   // Get recently active lists (recent additions across all users)
   const { data: recentListActivity } = await supabase
-    .from('list_movies')
+    .from('list_items')
     .select(`
       id,
       title,
-      poster_path,
+      cover_image,
       rank,
       created_at,
       user_list_id,
@@ -259,7 +259,7 @@ function ListActivityItem({ item }: { item: any }) {
           </Link>{' '}
           added to{' '}
           <Link
-            href={`/lists/${item.userListId}`}
+            href={`/${template?.category || 'movies'}/lists/${item.userListId}`}
             className="font-medium text-rose-500 hover:underline"
           >
             {template?.display_name || 'a list'}
@@ -267,9 +267,9 @@ function ListActivityItem({ item }: { item: any }) {
         </p>
 
         <div className="mt-2 flex items-center gap-2">
-          {item.poster_path ? (
+          {item.cover_image ? (
             <Image
-              src={getPosterUrl(item.poster_path, 'w92')}
+              src={getPosterUrl(item.cover_image, 'w92')}
               alt={item.title}
               width={32}
               height={48}

@@ -25,7 +25,7 @@ export default async function ListsPage() {
       `
       *,
       list_templates (*),
-      list_movies (count)
+      list_items (count)
     `
     )
     .eq('user_id', user.id)
@@ -56,7 +56,7 @@ export default async function ListsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {lists.map((list: any) => {
             const template = list.list_templates
-            const movieCount = list.list_movies?.[0]?.count || 0
+            const itemCount = list.list_items?.[0]?.count || 0
             const maxCount = parseInt(template.max_count)
             const description = formatListDescription(
               template.genre,
@@ -67,7 +67,7 @@ export default async function ListsPage() {
             return (
               <Link
                 key={list.id}
-                href={`/lists/${list.id}`}
+                href={`/${template.category || 'movies'}/lists/${list.id}`}
                 className="rounded-lg border border-gray-200 p-6 transition-colors hover:border-rose-500 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
               >
                 <h3 className="font-semibold text-rose-500">
@@ -76,12 +76,12 @@ export default async function ListsPage() {
                 <p className="mt-1 text-sm text-gray-500">{description}</p>
                 <div className="mt-4 flex items-center justify-between">
                   <span className="text-sm text-gray-400">
-                    {movieCount} / {maxCount} movies
+                    {itemCount} / {maxCount}
                   </span>
                   <div className="h-2 w-24 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                     <div
                       className="h-full bg-rose-500"
-                      style={{ width: `${(movieCount / maxCount) * 100}%` }}
+                      style={{ width: `${(itemCount / maxCount) * 100}%` }}
                     />
                   </div>
                 </div>
