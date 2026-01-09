@@ -2,6 +2,7 @@
 import { getCategoryConfig, type ListCategory } from './categories'
 
 const genreLabels: Record<string, string> = {
+  // Movie/TV genres
   action: 'Action',
   adventure: 'Adventure',
   animation: 'Animation',
@@ -20,6 +21,17 @@ const genreLabels: Record<string, string> = {
   thriller: 'Thriller',
   war: 'War',
   western: 'Western',
+  // Music genres
+  rock: 'Rock',
+  pop: 'Pop',
+  hiphop: 'Hip-Hop',
+  electronic: 'Electronic',
+  jazz: 'Jazz',
+  classical: 'Classical',
+  rnb: 'R&B',
+  metal: 'Metal',
+  indie: 'Indie',
+  country: 'Country',
 }
 
 const keywordLabels: Record<string, string> = {
@@ -97,9 +109,19 @@ export function generateListName(
     parts.push(certificationLabels[certification])
   }
 
-  // Determine the main category name
-  if (keyword && keywordLabels[keyword]) {
-    // Keywords become plural nouns: "Remakes", "Sequels", "Book Adaptations"
+  // Handle music category specially - include both genre and type
+  const isMusicType = keyword && ['artist', 'album', 'song'].includes(keyword)
+
+  if (isMusicType) {
+    // For music: "Top 10 Hip-Hop Artists" or "Top 10 Rock Albums"
+    if (genre && genreLabels[genre]) {
+      parts.push(genreLabels[genre])
+    }
+    // Pluralize the music type
+    const label = keywordLabels[keyword]
+    parts.push(label + 's')
+  } else if (keyword && keywordLabels[keyword]) {
+    // Non-music keywords become plural nouns: "Remakes", "Sequels", "Book Adaptations"
     const label = keywordLabels[keyword]
     if (label.endsWith('y')) {
       parts.push(label.slice(0, -1) + 'ies')
@@ -137,6 +159,19 @@ export function formatListDescription(
   // Build a readable description
   const categoryConfig = getCategoryConfig(category)
   const itemNamePlural = categoryConfig?.itemNamePlural || 'Movies'
+
+  // Handle music types specially
+  const isMusicType = keyword && ['artist', 'album', 'song'].includes(keyword)
+
+  if (isMusicType) {
+    // For music: "Top 10 Hip-Hop Artists" or "Top 10 Rock Albums"
+    const parts = [`Top ${count}`]
+    if (genre && genreLabels[genre]) {
+      parts.push(genreLabels[genre])
+    }
+    parts.push(keywordLabels[keyword] + 's')
+    return parts.join(' ')
+  }
 
   const descriptors: string[] = []
 

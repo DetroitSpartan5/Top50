@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .from('user_lists')
     .select(`
       user_id,
-      list_templates (display_name, max_count)
+      list_templates (display_name, max_count, genre, decade, keyword, certification, language, category)
     `)
     .eq('id', id)
     .single()
@@ -37,7 +37,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'List' }
   }
 
-  const template = list.list_templates as unknown as { display_name: string; max_count: string }
+  const template = list.list_templates as unknown as {
+    display_name: string
+    max_count: string
+    genre: string | null
+    decade: string | null
+    keyword: string | null
+    certification: string | null
+    language: string | null
+    category: string
+  }
+
+  const listName = formatListDescription(
+    template.genre,
+    template.decade,
+    template.max_count,
+    template.keyword,
+    template.certification,
+    template.language,
+    template.category as any
+  )
 
   // Get username
   const { data: profile } = await supabase
@@ -68,24 +87,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     othersCount = (count || 1) - 1
   }
 
-  const title = `${profile?.username}'s ${template.display_name}`
-  const description = othersCount > 0
+  const title = `${profile?.username}'s ${listName}`
+  const metaDescription = othersCount > 0
     ? `${itemCount || 0}/${template.max_count} ranked. ${othersCount} other${othersCount === 1 ? '' : 's'} have this list - how would you rank yours?`
     : `${itemCount || 0}/${template.max_count} ranked. Create your own and compare!`
 
   return {
-    title: template.display_name,
-    description,
+    title: listName,
+    description: metaDescription,
     openGraph: {
       title,
-      description,
+      description: metaDescription,
       type: 'article',
       url: `/${category}/lists/${id}`,
     },
     twitter: {
       card: 'summary_large_image',
       title,
-      description,
+      description: metaDescription,
     },
   }
 }
@@ -197,8 +216,7 @@ export default async function CategoryListPage({ params }: Props) {
 
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold">{template.display_name}</h1>
-            <p className="mt-1 text-gray-500">{description}</p>
+            <h1 className="text-3xl font-bold">{description}</h1>
             <div className="mt-2 flex items-center gap-4 text-sm">
               {!isOwner && (
                 <Link
@@ -218,7 +236,7 @@ export default async function CategoryListPage({ params }: Props) {
             <ListShareButton
               listId={id}
               category={category}
-              listName={template.display_name}
+              listName={description}
               username={profile.username || ''}
               othersCount={othersCount}
             />
@@ -327,7 +345,7 @@ export default async function CategoryListPage({ params }: Props) {
       {!user && (
         <SignupCTA
           variant="list"
-          listName={template.display_name}
+          listName={description}
           othersCount={othersCount}
         />
       )}
