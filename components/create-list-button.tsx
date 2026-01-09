@@ -10,8 +10,10 @@ import type {
   ListKeyword,
   ListCertification,
   ListLanguage,
+  ListCategory,
 } from '@/types/database'
 import { formatListDescription } from '@/lib/list-names'
+import { CATEGORIES, CATEGORY_LIST } from '@/lib/categories'
 
 const GENRES: { value: ListGenre; label: string }[] = [
   { value: 'action', label: 'Action' },
@@ -89,6 +91,7 @@ interface Props {
 
 export function CreateListButton({ variant = 'default' }: Props) {
   const [isOpen, setIsOpen] = useState(false)
+  const [category, setCategory] = useState<ListCategory>('movies')
   const [genre, setGenre] = useState<ListGenre | null>(null)
   const [decade, setDecade] = useState<ListDecade | null>(null)
   const [keyword, setKeyword] = useState<ListKeyword | null>(null)
@@ -101,18 +104,24 @@ export function CreateListButton({ variant = 'default' }: Props) {
   const [isLoadingCount, setIsLoadingCount] = useState(false)
   const router = useRouter()
 
-  const description = formatListDescription(genre, decade, count, keyword, certification, language)
+  // Only show full filters for movies and TV
+  const showAdvancedFilters = category === 'movies' || category === 'tv'
+
+  const description = showAdvancedFilters
+    ? formatListDescription(genre, decade, count, keyword, certification, language, category)
+    : `Top ${count} ${CATEGORIES[category]?.namePlural || category}`
 
   // Fetch user count when params change
   const fetchUserCount = useCallback(async () => {
     setIsLoadingCount(true)
     try {
       const result = await getTemplateUserCount({
-        genre,
-        decade,
-        keyword,
-        certification,
-        language,
+        category,
+        genre: showAdvancedFilters ? genre : null,
+        decade: showAdvancedFilters ? decade : null,
+        keyword: showAdvancedFilters ? keyword : null,
+        certification: showAdvancedFilters ? certification : null,
+        language: showAdvancedFilters ? language : null,
         maxCount: count,
       })
       setUserCount(result)
@@ -121,7 +130,7 @@ export function CreateListButton({ variant = 'default' }: Props) {
     } finally {
       setIsLoadingCount(false)
     }
-  }, [genre, decade, keyword, certification, language, count])
+  }, [category, genre, decade, keyword, certification, language, count, showAdvancedFilters])
 
   useEffect(() => {
     if (isOpen) {
@@ -136,15 +145,16 @@ export function CreateListButton({ variant = 'default' }: Props) {
     startTransition(async () => {
       try {
         const listId = await createList({
-          genre,
-          decade,
-          keyword,
-          certification,
-          language,
+          category,
+          genre: showAdvancedFilters ? genre : null,
+          decade: showAdvancedFilters ? decade : null,
+          keyword: showAdvancedFilters ? keyword : null,
+          certification: showAdvancedFilters ? certification : null,
+          language: showAdvancedFilters ? language : null,
           maxCount: count,
         })
         setIsOpen(false)
-        router.push(`/lists/${listId}`)
+        router.push(`/${category}/lists/${listId}`)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to create list')
       }
@@ -176,100 +186,135 @@ export function CreateListButton({ variant = 'default' }: Props) {
             <h2 className="mb-4 text-xl font-semibold">Create New List</h2>
 
             <form onSubmit={handleSubmit}>
-              {/* Genre */}
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium">Genre</label>
-                <select
-                  value={genre || ''}
-                  onChange={(e) =>
-                    setGenre((e.target.value as ListGenre) || null)
-                  }
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
-                >
-                  <option value="">Any Genre</option>
-                  {GENRES.map((g) => (
-                    <option key={g.value} value={g.value}>
-                      {g.label}
-                    </option>
+              {/* Category Selection */}
+              <div className="mb-6">
+                <label className="mb-2 block text-sm font-medium">What do you want to rank?</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {CATEGORY_LIST.map((cat) => (
+                    <button
+                      key={cat.slug}
+                      type="button"
+                      onClick={() => {
+                        setCategory(cat.slug)
+                        // Reset filters when changing category
+                        setGenre(null)
+                        setDecade(null)
+                        setKeyword(null)
+                        setCertification(null)
+                        setLanguage(null)
+                      }}
+                      className={`flex flex-col items-center gap-1 rounded-lg border p-3 text-sm transition-colors ${
+                        category === cat.slug
+                          ? 'border-rose-500 bg-rose-50 text-rose-600 dark:bg-rose-900/20'
+                          : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
+                      }`}
+                    >
+                      <span className="text-xl">{cat.icon}</span>
+                      <span className="font-medium">{cat.name}</span>
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
 
-              {/* Decade */}
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium">Decade</label>
-                <select
-                  value={decade || ''}
-                  onChange={(e) =>
-                    setDecade((e.target.value as ListDecade) || null)
-                  }
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
-                >
-                  <option value="">All Time</option>
-                  {DECADES.map((d) => (
-                    <option key={d.value} value={d.value}>
-                      {d.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Advanced filters - only for Movies and TV */}
+              {showAdvancedFilters && (
+                <>
+                  {/* Genre */}
+                  <div className="mb-4">
+                    <label className="mb-2 block text-sm font-medium">Genre</label>
+                    <select
+                      value={genre || ''}
+                      onChange={(e) =>
+                        setGenre((e.target.value as ListGenre) || null)
+                      }
+                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                    >
+                      <option value="">Any Genre</option>
+                      {GENRES.map((g) => (
+                        <option key={g.value} value={g.value}>
+                          {g.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Category/Keyword */}
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium">Category</label>
-                <select
-                  value={keyword || ''}
-                  onChange={(e) =>
-                    setKeyword((e.target.value as ListKeyword) || null)
-                  }
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
-                >
-                  <option value="">Any Category</option>
-                  {KEYWORDS.map((k) => (
-                    <option key={k.value} value={k.value}>
-                      {k.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  {/* Decade */}
+                  <div className="mb-4">
+                    <label className="mb-2 block text-sm font-medium">Decade</label>
+                    <select
+                      value={decade || ''}
+                      onChange={(e) =>
+                        setDecade((e.target.value as ListDecade) || null)
+                      }
+                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                    >
+                      <option value="">All Time</option>
+                      {DECADES.map((d) => (
+                        <option key={d.value} value={d.value}>
+                          {d.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Rating */}
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium">Rating</label>
-                <select
-                  value={certification || ''}
-                  onChange={(e) =>
-                    setCertification((e.target.value as ListCertification) || null)
-                  }
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
-                >
-                  <option value="">Any Rating</option>
-                  {CERTIFICATIONS.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  {/* Keyword */}
+                  <div className="mb-4">
+                    <label className="mb-2 block text-sm font-medium">Type</label>
+                    <select
+                      value={keyword || ''}
+                      onChange={(e) =>
+                        setKeyword((e.target.value as ListKeyword) || null)
+                      }
+                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                    >
+                      <option value="">Any Type</option>
+                      {KEYWORDS.map((k) => (
+                        <option key={k.value} value={k.value}>
+                          {k.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Language */}
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium">Language</label>
-                <select
-                  value={language || ''}
-                  onChange={(e) =>
-                    setLanguage((e.target.value as ListLanguage) || null)
-                  }
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
-                >
-                  <option value="">Any Language</option>
-                  {LANGUAGES.map((l) => (
-                    <option key={l.value} value={l.value}>
-                      {l.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  {/* Rating */}
+                  <div className="mb-4">
+                    <label className="mb-2 block text-sm font-medium">Rating</label>
+                    <select
+                      value={certification || ''}
+                      onChange={(e) =>
+                        setCertification((e.target.value as ListCertification) || null)
+                      }
+                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                    >
+                      <option value="">Any Rating</option>
+                      {CERTIFICATIONS.map((c) => (
+                        <option key={c.value} value={c.value}>
+                          {c.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Language */}
+                  <div className="mb-4">
+                    <label className="mb-2 block text-sm font-medium">Language</label>
+                    <select
+                      value={language || ''}
+                      onChange={(e) =>
+                        setLanguage((e.target.value as ListLanguage) || null)
+                      }
+                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                    >
+                      <option value="">Any Language</option>
+                      {LANGUAGES.map((l) => (
+                        <option key={l.value} value={l.value}>
+                          {l.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
 
               {/* List Size */}
               <div className="mb-6">
@@ -298,7 +343,10 @@ export function CreateListButton({ variant = 'default' }: Props) {
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   You&apos;re creating:
                 </p>
-                <p className="font-medium">{description}</p>
+                <p className="font-medium">
+                  <span className="mr-1">{CATEGORIES[category]?.icon}</span>
+                  {description}
+                </p>
                 {!isLoadingCount && userCount > 0 && (
                   <p className="mt-2 text-sm text-rose-500">
                     Join {userCount} other{userCount === 1 ? '' : 's'} with this list

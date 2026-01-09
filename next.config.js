@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // Disable Next.js image optimization to avoid Vercel bandwidth limits
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
