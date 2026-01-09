@@ -1,4 +1,5 @@
 node_modules
 .env*
 .next/
+.DS_Storetsconfig.tsbuildinfo
 .DS_Store
