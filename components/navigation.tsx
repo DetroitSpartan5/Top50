@@ -1,0 +1,79 @@
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+
+export async function Navigation() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Get username for profile link
+  let username: string | null = null
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', user.id)
+      .single()
+    username = profile?.username || null
+  }
+
+  return (
+    <header className="border-b border-gray-200 dark:border-gray-800">
+      <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
+        <Link href="/" className="text-xl font-bold">
+          Top 50 Movies
+        </Link>
+
+        <div className="flex items-center gap-4">
+          {user ? (
+            <>
+              <Link
+                href="/feed"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+              >
+                Feed
+              </Link>
+              <Link
+                href="/users"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+              >
+                Discover
+              </Link>
+              <Link
+                href="/my-list"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+              >
+                My List
+              </Link>
+              {username && (
+                <Link
+                  href={`/users/${username}`}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-600 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-400 dark:hover:bg-blue-800"
+                  title="My Profile"
+                >
+                  {username[0].toUpperCase()}
+                </Link>
+              )}
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
+        </div>
+      </nav>
+    </header>
+  )
+}
