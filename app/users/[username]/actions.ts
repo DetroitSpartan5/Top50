@@ -53,3 +53,35 @@ export async function unfollowUser(userId: string) {
   revalidatePath('/users')
   revalidatePath('/feed')
 }
+
+export async function updateBio(bio: string | null) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  // Get the user's profile to find their username for revalidation
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('username')
+    .eq('id', user.id)
+    .single()
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ bio })
+    .eq('id', user.id)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  if (profile?.username) {
+    revalidatePath(`/users/${profile.username}`)
+  }
+  revalidatePath('/users')
+}
