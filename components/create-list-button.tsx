@@ -15,7 +15,7 @@ import type {
 import { formatListDescription } from '@/lib/list-names'
 import { CATEGORIES, CATEGORY_LIST } from '@/lib/categories'
 
-const GENRES: { value: ListGenre; label: string }[] = [
+const MOVIE_GENRES: { value: ListGenre; label: string }[] = [
   { value: 'action', label: 'Action' },
   { value: 'adventure', label: 'Adventure' },
   { value: 'animation', label: 'Animation' },
@@ -34,6 +34,25 @@ const GENRES: { value: ListGenre; label: string }[] = [
   { value: 'thriller', label: 'Thriller' },
   { value: 'war', label: 'War' },
   { value: 'western', label: 'Western' },
+]
+
+const MUSIC_TYPES: { value: ListKeyword; label: string }[] = [
+  { value: 'artist', label: 'Artists' },
+  { value: 'album', label: 'Albums' },
+  { value: 'song', label: 'Songs' },
+]
+
+const MUSIC_GENRES: { value: ListGenre; label: string }[] = [
+  { value: 'rock', label: 'Rock' },
+  { value: 'pop', label: 'Pop' },
+  { value: 'hiphop', label: 'Hip-Hop' },
+  { value: 'electronic', label: 'Electronic' },
+  { value: 'jazz', label: 'Jazz' },
+  { value: 'classical', label: 'Classical' },
+  { value: 'rnb', label: 'R&B' },
+  { value: 'metal', label: 'Metal' },
+  { value: 'indie', label: 'Indie' },
+  { value: 'country', label: 'Country' },
 ]
 
 const DECADES: { value: ListDecade; label: string }[] = [
@@ -106,9 +125,23 @@ export function CreateListButton({ variant = 'default' }: Props) {
 
   // Only show full filters for movies and TV
   const showAdvancedFilters = category === 'movies' || category === 'tv'
+  // Music only shows type (Artists/Albums/Songs)
+  const showMusicFilters = category === 'music'
+
+  // Build description based on category
+  const getMusicDescription = () => {
+    const genreLabel = genre ? MUSIC_GENRES.find(g => g.value === genre)?.label : null
+    const typeLabel = keyword === 'artist' ? 'Artists' : keyword === 'album' ? 'Albums' : keyword === 'song' ? 'Songs' : null
+    if (genreLabel && typeLabel) return `Top ${count} ${genreLabel} ${typeLabel}`
+    if (genreLabel) return `Top ${count} ${genreLabel} Music`
+    if (typeLabel) return `Top ${count} ${typeLabel}`
+    return `Top ${count} Music`
+  }
 
   const description = showAdvancedFilters
     ? formatListDescription(genre, decade, count, keyword, certification, language, category)
+    : showMusicFilters
+    ? getMusicDescription()
     : `Top ${count} ${CATEGORIES[category]?.namePlural || category}`
 
   // Fetch user count when params change
@@ -117,9 +150,9 @@ export function CreateListButton({ variant = 'default' }: Props) {
     try {
       const result = await getTemplateUserCount({
         category,
-        genre: showAdvancedFilters ? genre : null,
+        genre: (showAdvancedFilters || showMusicFilters) ? genre : null,
         decade: showAdvancedFilters ? decade : null,
-        keyword: showAdvancedFilters ? keyword : null,
+        keyword: (showAdvancedFilters || showMusicFilters) ? keyword : null,
         certification: showAdvancedFilters ? certification : null,
         language: showAdvancedFilters ? language : null,
         maxCount: count,
@@ -130,7 +163,7 @@ export function CreateListButton({ variant = 'default' }: Props) {
     } finally {
       setIsLoadingCount(false)
     }
-  }, [category, genre, decade, keyword, certification, language, count, showAdvancedFilters])
+  }, [category, genre, decade, keyword, certification, language, count, showAdvancedFilters, showMusicFilters])
 
   useEffect(() => {
     if (isOpen) {
@@ -146,9 +179,9 @@ export function CreateListButton({ variant = 'default' }: Props) {
       try {
         const listId = await createList({
           category,
-          genre: showAdvancedFilters ? genre : null,
+          genre: (showAdvancedFilters || showMusicFilters) ? genre : null,
           decade: showAdvancedFilters ? decade : null,
-          keyword: showAdvancedFilters ? keyword : null,
+          keyword: (showAdvancedFilters || showMusicFilters) ? keyword : null,
           certification: showAdvancedFilters ? certification : null,
           language: showAdvancedFilters ? language : null,
           maxCount: count,
@@ -216,6 +249,49 @@ export function CreateListButton({ variant = 'default' }: Props) {
                 </div>
               </div>
 
+              {/* Music filters - type (Artists/Albums/Songs) and genre */}
+              {showMusicFilters && (
+                <>
+                  <div className="mb-4">
+                    <label className="mb-2 block text-sm font-medium">What are you ranking?</label>
+                    <div className="flex gap-2">
+                      {MUSIC_TYPES.map((t) => (
+                        <button
+                          key={t.value}
+                          type="button"
+                          onClick={() => setKeyword(t.value)}
+                          className={`flex-1 rounded-md border px-3 py-2 text-sm ${
+                            keyword === t.value
+                              ? 'border-rose-500 bg-rose-50 text-rose-600 dark:bg-rose-900/20'
+                              : 'border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800'
+                          }`}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="mb-2 block text-sm font-medium">Genre</label>
+                    <select
+                      value={genre || ''}
+                      onChange={(e) =>
+                        setGenre((e.target.value as ListGenre) || null)
+                      }
+                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                    >
+                      <option value="">Any Genre</option>
+                      {MUSIC_GENRES.map((g) => (
+                        <option key={g.value} value={g.value}>
+                          {g.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
               {/* Advanced filters - only for Movies and TV */}
               {showAdvancedFilters && (
                 <>
@@ -230,7 +306,7 @@ export function CreateListButton({ variant = 'default' }: Props) {
                       className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
                     >
                       <option value="">Any Genre</option>
-                      {GENRES.map((g) => (
+                      {MOVIE_GENRES.map((g) => (
                         <option key={g.value} value={g.value}>
                           {g.label}
                         </option>

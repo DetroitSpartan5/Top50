@@ -314,8 +314,8 @@ export function AddListItemButton({
                           unoptimized={image.isExternal}
                         />
                       ) : (
-                        <div className="flex h-[69px] w-[46px] items-center justify-center rounded bg-gray-200 text-xs text-gray-400 dark:bg-gray-700">
-                          No img
+                        <div className="flex h-[69px] w-[46px] items-center justify-center rounded bg-gradient-to-br from-rose-400 to-rose-600 text-xl font-bold text-white">
+                          {item.title?.[0]?.toUpperCase() || '?'}
                         </div>
                       )}
                       <div className="min-w-0 flex-grow">

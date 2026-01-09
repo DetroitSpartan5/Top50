@@ -110,9 +110,13 @@ export async function GET(request: Request) {
     const data = await res.json()
     // Navigate the data path (e.g., data.albums.album or data.tracks.track)
     const items = dataPath.reduce((obj, key) => obj?.[key], data) || []
-    const results = items.map(normalizer).filter((item: any) => item.poster_path)
+    // For artists, don't filter by image since many don't have one
+    const results = items.map(normalizer)
+    const filteredResults = type === 'artist'
+      ? results
+      : results.filter((item: any) => item.poster_path)
 
-    return NextResponse.json({ results })
+    return NextResponse.json({ results: filteredResults })
   } catch (error) {
     console.error('Music popular error:', error)
     return NextResponse.json({ results: [] })
