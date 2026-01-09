@@ -3,11 +3,40 @@
 import Link from 'next/link'
 
 interface SignupCTAProps {
-  variant: 'follow' | 'compare' | 'create' | 'inline'
+  variant: 'follow' | 'compare' | 'create' | 'inline' | 'list'
   username?: string
+  listName?: string
+  othersCount?: number
 }
 
-export function SignupCTA({ variant, username }: SignupCTAProps) {
+export function SignupCTA({ variant, username, listName, othersCount }: SignupCTAProps) {
+  if (variant === 'list') {
+    return (
+      <div className="mt-8 rounded-xl border-2 border-dashed border-rose-300 bg-rose-50 p-6 text-center dark:border-rose-800 dark:bg-rose-900/20">
+        <h3 className="text-xl font-bold text-rose-700 dark:text-rose-300">
+          How would you rank yours?
+        </h3>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">
+          {othersCount && othersCount > 0
+            ? `${othersCount} other${othersCount === 1 ? '' : 's'} have ranked their ${listName || 'list'}. Join them!`
+            : `Create your own ${listName || 'list'} and share it with friends.`}
+        </p>
+        <Link
+          href="/signup"
+          className="mt-4 inline-block rounded-md bg-rose-500 px-6 py-3 font-medium text-white transition-colors hover:bg-rose-600"
+        >
+          Create Your Own List
+        </Link>
+        <p className="mt-3 text-sm text-gray-500">
+          Already have an account?{' '}
+          <Link href="/login" className="text-rose-500 hover:underline">
+            Log in
+          </Link>
+        </p>
+      </div>
+    )
+  }
+
   if (variant === 'follow') {
     return (
       <Link
