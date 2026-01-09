@@ -21,13 +21,35 @@ export async function addMovie(data: AddMovieData) {
     throw new Error('Unauthorized')
   }
 
+  // Check if movie already exists in user's list
+  if (data.tmdb_id) {
+    const { data: existing } = await supabase
+      .from('user_movies')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('tmdb_id', data.tmdb_id)
+      .single()
+
+    if (existing) {
+      throw new Error('Movie already in your list')
+    }
+  }
+
+  // Check if rank is already taken and get proper rank
+  const { count } = await supabase
+    .from('user_movies')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+
+  const nextRank = (count || 0) + 1
+
   const { error } = await supabase.from('user_movies').insert({
     user_id: user.id,
     title: data.title,
     tmdb_id: data.tmdb_id,
     poster_path: data.poster_path,
     release_year: data.release_year,
-    rank: data.rank,
+    rank: nextRank,
   })
 
   if (error) {
