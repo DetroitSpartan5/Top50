@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { generateListName } from '@/lib/list-names'
 import type {
+  ListCategory,
   ListGenre,
   ListDecade,
   ListCount,
@@ -12,7 +13,70 @@ import type {
   ListLanguage,
 } from '@/types/database'
 
+interface TemplateParams {
+  category?: ListCategory
+  genre: ListGenre | null
+  decade: ListDecade | null
+  keyword: ListKeyword | null
+  certification: ListCertification | null
+  language: ListLanguage | null
+  maxCount: ListCount
+}
+
+export async function getTemplateUserCount(data: TemplateParams): Promise<number> {
+  const supabase = await createClient()
+  const category = data.category || 'movies'
+
+  // Build query to find matching template
+  let query = supabase.from('list_templates').select('id').eq('category', category)
+
+  if (data.genre === null) {
+    query = query.is('genre', null)
+  } else {
+    query = query.eq('genre', data.genre)
+  }
+
+  if (data.decade === null) {
+    query = query.is('decade', null)
+  } else {
+    query = query.eq('decade', data.decade)
+  }
+
+  if (data.keyword === null) {
+    query = query.is('keyword', null)
+  } else {
+    query = query.eq('keyword', data.keyword)
+  }
+
+  if (data.certification === null) {
+    query = query.is('certification', null)
+  } else {
+    query = query.eq('certification', data.certification)
+  }
+
+  if (data.language === null) {
+    query = query.is('language', null)
+  } else {
+    query = query.eq('language', data.language)
+  }
+
+  const { data: template } = await query.eq('max_count', data.maxCount).single()
+
+  if (!template) {
+    return 0
+  }
+
+  // Count how many users have this template
+  const { count } = await supabase
+    .from('user_lists')
+    .select('*', { count: 'exact', head: true })
+    .eq('template_id', template.id)
+
+  return count || 0
+}
+
 interface CreateListData {
+  category?: ListCategory
   genre: ListGenre | null
   decade: ListDecade | null
   keyword: ListKeyword | null
@@ -31,9 +95,11 @@ export async function createList(data: CreateListData) {
     throw new Error('Unauthorized')
   }
 
+  const category = data.category || 'movies'
+
   // Check if template exists, create if not
   // Note: use .is() for null comparisons, .eq() for non-null
-  let query = supabase.from('list_templates').select('id')
+  let query = supabase.from('list_templates').select('id').eq('category', category)
 
   // Genre filter
   if (data.genre === null) {
@@ -80,11 +146,13 @@ export async function createList(data: CreateListData) {
       data.maxCount,
       data.keyword,
       data.certification,
-      data.language
+      data.language,
+      category
     )
     const { data: newTemplate, error: templateError } = await supabase
       .from('list_templates')
       .insert({
+        category,
         genre: data.genre,
         decade: data.decade,
         keyword: data.keyword,
@@ -130,6 +198,7 @@ export async function createList(data: CreateListData) {
   }
 
   revalidatePath('/lists')
+  revalidatePath(`/${category}`)
   return userList.id
 }
 
@@ -177,8 +246,10 @@ interface AddListMovieData {
   userListId: string
   title: string
   tmdbId: number | null
+  externalId?: string | null  // For non-TMDB items (books, games)
   posterPath: string | null
   releaseYear: number | null
+  subtitle?: string | null  // Author for books, etc.
 }
 
 export async function addListMovie(data: AddListMovieData) {
@@ -206,10 +277,10 @@ export async function addListMovie(data: AddListMovieData) {
   // Check if movie already exists in this list
   if (data.tmdbId) {
     const { data: existing } = await supabase
-      .from('list_movies')
+      .from('list_items')
       .select('id')
       .eq('user_list_id', data.userListId)
-      .eq('tmdb_id', data.tmdbId)
+      .eq('external_id', String(data.tmdbId))
       .single()
 
     if (existing) {
@@ -219,7 +290,7 @@ export async function addListMovie(data: AddListMovieData) {
 
   // Get current count and check max
   const { count } = await supabase
-    .from('list_movies')
+    .from('list_items')
     .select('*', { count: 'exact', head: true })
     .eq('user_list_id', data.userListId)
 
@@ -230,12 +301,16 @@ export async function addListMovie(data: AddListMovieData) {
 
   const nextRank = (count || 0) + 1
 
-  const { error } = await supabase.from('list_movies').insert({
+  // Use externalId if provided, otherwise convert tmdbId to string
+  const external_id = data.externalId || (data.tmdbId ? String(data.tmdbId) : null)
+
+  const { error } = await supabase.from('list_items').insert({
     user_list_id: data.userListId,
     title: data.title,
-    tmdb_id: data.tmdbId,
-    poster_path: data.posterPath,
-    release_year: data.releaseYear,
+    external_id,
+    cover_image: data.posterPath,
+    subtitle: data.subtitle || null,
+    year: data.releaseYear,
     rank: nextRank,
   })
 
@@ -256,9 +331,9 @@ export async function removeListMovie(movieId: string, userListId: string) {
     throw new Error('Unauthorized')
   }
 
-  // Get the movie to know its rank
+  // Get the item to know its rank
   const { data: movie } = await supabase
-    .from('list_movies')
+    .from('list_items')
     .select('rank, user_list_id')
     .eq('id', movieId)
     .single()
@@ -279,9 +354,9 @@ export async function removeListMovie(movieId: string, userListId: string) {
     throw new Error('Unauthorized')
   }
 
-  // Delete the movie
+  // Delete the item
   const { error: deleteError } = await supabase
-    .from('list_movies')
+    .from('list_items')
     .delete()
     .eq('id', movieId)
 
@@ -291,7 +366,7 @@ export async function removeListMovie(movieId: string, userListId: string) {
 
   // Shift ranks
   const { data: moviesToUpdate } = await supabase
-    .from('list_movies')
+    .from('list_items')
     .select('id, rank')
     .eq('user_list_id', movie.user_list_id)
     .gt('rank', movie.rank)
@@ -300,7 +375,7 @@ export async function removeListMovie(movieId: string, userListId: string) {
   if (moviesToUpdate && moviesToUpdate.length > 0) {
     for (const m of moviesToUpdate) {
       await supabase
-        .from('list_movies')
+        .from('list_items')
         .update({ rank: m.rank - 1 })
         .eq('id', m.id)
     }
@@ -309,7 +384,7 @@ export async function removeListMovie(movieId: string, userListId: string) {
   revalidatePath(`/lists/${userListId}`)
 }
 
-export async function reorderListMovies(userListId: string, orderedIds: string[]) {
+export async function reorderListItems(userListId: string, orderedIds: string[]) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -331,9 +406,9 @@ export async function reorderListMovies(userListId: string, orderedIds: string[]
     throw new Error('Unauthorized')
   }
 
-  const { error } = await supabase.rpc('reorder_list_movies', {
+  const { error } = await supabase.rpc('reorder_list_items', {
     p_user_list_id: userListId,
-    p_movie_ids: orderedIds,
+    p_item_ids: orderedIds,
   })
 
   if (error) {
@@ -366,16 +441,17 @@ export async function deleteList(userListId: string) {
   revalidatePath('/lists')
 }
 
-interface BatchMovie {
-  tmdb_id: number
+interface BatchItem {
+  external_id: string
   title: string
-  poster_path: string | null
-  release_year: number | null
+  cover_image: string | null
+  year: number | null
+  subtitle?: string | null
 }
 
-export async function batchAddListMovies(
+export async function batchAddListItems(
   userListId: string,
-  movies: BatchMovie[],
+  items: BatchItem[],
   existingCount: number
 ) {
   const supabase = await createClient()
@@ -402,21 +478,22 @@ export async function batchAddListMovies(
   const maxCount = parseInt((userList.list_templates as any).max_count)
   const availableSlots = maxCount - existingCount
 
-  if (movies.length > availableSlots) {
-    throw new Error(`Can only add ${availableSlots} more movies`)
+  if (items.length > availableSlots) {
+    throw new Error(`Can only add ${availableSlots} more items`)
   }
 
-  // Insert all movies with incrementing ranks
-  const moviesToInsert = movies.map((movie, index) => ({
+  // Insert all items with incrementing ranks
+  const itemsToInsert = items.map((item, index) => ({
     user_list_id: userListId,
-    title: movie.title,
-    tmdb_id: movie.tmdb_id,
-    poster_path: movie.poster_path,
-    release_year: movie.release_year,
+    title: item.title,
+    external_id: item.external_id,
+    cover_image: item.cover_image,
+    subtitle: item.subtitle || null,
+    year: item.year,
     rank: existingCount + index + 1,
   }))
 
-  const { error } = await supabase.from('list_movies').insert(moviesToInsert)
+  const { error } = await supabase.from('list_items').insert(itemsToInsert)
 
   if (error) {
     throw new Error(error.message)

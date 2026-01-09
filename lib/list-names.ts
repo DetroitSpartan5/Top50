@@ -1,4 +1,5 @@
 // Templated list names based on parameters
+import { getCategoryConfig, type ListCategory } from './categories'
 
 const genreLabels: Record<string, string> = {
   action: 'Action',
@@ -31,6 +32,10 @@ const keywordLabels: Record<string, string> = {
   time_travel: 'Time Travel',
   dystopia: 'Dystopian',
   christmas: 'Christmas',
+  // Music type keywords
+  album: 'Album',
+  song: 'Song',
+  artist: 'Artist',
 }
 
 const certificationLabels: Record<string, string> = {
@@ -67,10 +72,14 @@ export function generateListName(
   count: string,
   keyword?: string | null,
   certification?: string | null,
-  language?: string | null
+  language?: string | null,
+  category: ListCategory = 'movies'
 ): string {
   // Build name like "Top 10 Horror Movies" or "Top 25 1980s Comedies"
   // or "Top 10 Remakes" or "Top 10 Korean Films"
+  const categoryConfig = getCategoryConfig(category)
+  const itemNamePlural = categoryConfig?.itemNamePlural || 'Movies'
+
   const parts: string[] = [`Top ${count}`]
 
   // Add decade if present
@@ -109,8 +118,8 @@ export function generateListName(
       parts.push(genreLabel + 's')
     }
   } else {
-    // Default to "Movies" or "Films" based on language
-    parts.push(language ? 'Films' : 'Movies')
+    // Default to category item name (Movies, Shows, Books, Games)
+    parts.push(language ? 'Films' : itemNamePlural)
   }
 
   return parts.join(' ')
@@ -122,9 +131,13 @@ export function formatListDescription(
   count: string,
   keyword?: string | null,
   certification?: string | null,
-  language?: string | null
+  language?: string | null,
+  category: ListCategory = 'movies'
 ): string {
   // Build a readable description
+  const categoryConfig = getCategoryConfig(category)
+  const itemNamePlural = categoryConfig?.itemNamePlural || 'Movies'
+
   const descriptors: string[] = []
 
   if (certification && certificationLabels[certification]) {
@@ -149,7 +162,7 @@ export function formatListDescription(
     result += descriptors.join(' ') + ' '
   }
 
-  result += 'Movies'
+  result += itemNamePlural
 
   if (decade) {
     result += ` of the ${decade}`

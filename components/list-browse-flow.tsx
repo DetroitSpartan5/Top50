@@ -5,22 +5,49 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getPosterUrl, cn } from '@/lib/utils'
-import type { TMDBMovie } from '@/types/tmdb'
-import type { ListTemplate, ListMovie } from '@/types/database'
+import type { ListTemplate, ListItem } from '@/types/database'
 import { useDebounce } from '@/hooks/use-debounce'
-import { batchAddListMovies } from '@/app/lists/actions'
+import { batchAddListItems } from '@/app/lists/actions'
+import { CATEGORIES } from '@/lib/categories'
+
+// Common item type for all categories
+type BrowseItem = {
+  id: number | string
+  title: string
+  release_date: string | null
+  poster_path: string | null
+  author?: string | null // For books
+}
+
+// Map our category slugs to TMDB type parameter
+function getTMDBType(category: string): string {
+  if (category === 'tv') return 'tv'
+  return 'movie'
+}
+
+// Get the appropriate image URL based on category and source
+function getImageUrl(item: BrowseItem, category: string): string | null {
+  if (!item.poster_path) return null
+  // TMDB images need the base URL prefix
+  if (category === 'movies' || category === 'tv') {
+    return getPosterUrl(item.poster_path, 'w342')
+  }
+  // Books and games return full URLs
+  return item.poster_path
+}
 
 interface Props {
   userListId: string
   template: ListTemplate
-  existingMovies: ListMovie[]
+  existingItems: ListItem[]
 }
 
-type SelectedMovie = {
-  tmdb_id: number
+type SelectedItem = {
+  external_id: string
   title: string
-  poster_path: string | null
-  release_year: number | null
+  cover_image: string | null
+  year: number | null
+  subtitle?: string | null
 }
 
 const FUN_MESSAGES = [
@@ -34,11 +61,11 @@ const FUN_MESSAGES = [
   "Respect",
 ]
 
-export function ListBrowseFlow({ userListId, template, existingMovies }: Props) {
+export function ListBrowseFlow({ userListId, template, existingItems }: Props) {
   const router = useRouter()
-  const [suggestedMovies, setSuggestedMovies] = useState<TMDBMovie[]>([])
-  const [searchResults, setSearchResults] = useState<TMDBMovie[]>([])
-  const [selectedMovies, setSelectedMovies] = useState<Map<number, SelectedMovie>>(new Map())
+  const [suggestedMovies, setSuggestedMovies] = useState<BrowseItem[]>([])
+  const [searchResults, setSearchResults] = useState<BrowseItem[]>([])
+  const [selectedItems, setSelectedItems] = useState<Map<number | string, SelectedItem>>(new Map())
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
@@ -50,19 +77,19 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
   const debouncedQuery = useDebounce(searchQuery, 300)
 
   const maxCount = parseInt(template.max_count)
-  const existingCount = existingMovies.length
+  const existingCount = existingItems.length
   const maxSelectable = maxCount - existingCount
 
-  // Map of tmdb_id -> rank for existing movies
-  const existingByTmdbId = useMemo(() => {
-    const map = new Map<number, number>()
-    existingMovies.forEach((m) => {
-      if (m.tmdb_id) map.set(m.tmdb_id, m.rank)
+  // Map of external_id -> rank for existing items
+  const existingByExternalId = useMemo(() => {
+    const map = new Map<string, number>()
+    existingItems.forEach((m) => {
+      if (m.external_id) map.set(m.external_id, m.rank)
     })
     return map
-  }, [existingMovies])
+  }, [existingItems])
 
-  const currentCount = selectedMovies.size
+  const currentCount = selectedItems.size
 
   // Build filter description
   const filterParts: string[] = []
@@ -80,7 +107,7 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
   if (template.genre) {
     filterParts.push(template.genre.charAt(0).toUpperCase() + template.genre.slice(1))
   }
-  if (template.keyword) {
+  if (template.keyword && template.category !== 'music') {
     const keywordNames: Record<string, string> = {
       remake: 'Remake', sequel: 'Sequel', based_on_book: 'Book Adaptation',
       based_on_true_story: 'True Story', superhero: 'Superhero', anime: 'Anime',
@@ -93,23 +120,71 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
   }
   const filterLabel = filterParts.join(' ')
 
+  // Get TMDB type for API calls
+  const tmdbType = getTMDBType(template.category)
+  const categoryConfig = CATEGORIES[template.category] || CATEGORIES.movies
+
   useEffect(() => {
     async function fetchSuggested() {
       try {
-        // Note: We skip keyword filters for suggestions because TMDB's keyword
-        // tagging is inconsistent. Users can use search to find specific movies.
-        const hasFilters = template.genre || template.decade ||
-          template.certification || template.language
-        const params = new URLSearchParams()
-        if (template.genre) params.set('genre', template.genre)
-        if (template.decade) params.set('decade', template.decade)
-        if (template.certification) params.set('certification', template.certification)
-        if (template.language) params.set('language', template.language)
-        params.set('pages', '5')
+        let url: string
 
-        const url = hasFilters
-          ? `/api/tmdb/discover?${params}`
-          : '/api/tmdb/top-rated?pages=5'
+        if (template.category === 'books') {
+          // Fetch popular books from Open Library
+          const params = new URLSearchParams()
+          if (template.genre) params.set('subject', template.genre)
+          url = `/api/books/popular?${params}`
+        } else if (template.category === 'games') {
+          // Fetch popular games from RAWG
+          const params = new URLSearchParams()
+          if (template.genre) params.set('genre', template.genre)
+          url = `/api/games/popular?${params}`
+        } else if (template.category === 'podcasts') {
+          // Fetch top podcasts from iTunes
+          const params = new URLSearchParams()
+          if (template.genre) params.set('genre', template.genre)
+          url = `/api/podcasts/popular?${params}`
+        } else if (template.category === 'cocktails') {
+          // Fetch popular cocktails from TheCocktailDB
+          const params = new URLSearchParams()
+          if (template.genre) params.set('genre', template.genre)
+          url = `/api/cocktails/popular?${params}`
+        } else if (template.category === 'breweries') {
+          // Fetch breweries from Open Brewery DB
+          const params = new URLSearchParams()
+          if (template.genre) params.set('genre', template.genre)
+          url = `/api/breweries/popular?${params}`
+        } else if (template.category === 'anime') {
+          // Fetch popular anime from AniList
+          const params = new URLSearchParams()
+          if (template.genre) params.set('genre', template.genre)
+          url = `/api/anime/popular?${params}`
+        } else if (template.category === 'music') {
+          // Fetch popular music from Last.fm (albums, tracks, or artists)
+          const params = new URLSearchParams()
+          if (template.genre) params.set('genre', template.genre)
+          // Use keyword to determine music type (album, song/track, artist)
+          const musicType = template.keyword === 'song' ? 'track' : template.keyword === 'artist' ? 'artist' : 'album'
+          params.set('type', musicType)
+          url = `/api/music/popular?${params}`
+        } else {
+          // TMDB for movies and TV
+          // Note: We skip keyword filters for suggestions because TMDB's keyword
+          // tagging is inconsistent. Users can use search to find specific titles.
+          const hasFilters = template.genre || template.decade ||
+            template.certification || template.language
+          const params = new URLSearchParams()
+          if (template.genre) params.set('genre', template.genre)
+          if (template.decade) params.set('decade', template.decade)
+          if (template.certification) params.set('certification', template.certification)
+          if (template.language) params.set('language', template.language)
+          params.set('type', tmdbType)
+          params.set('pages', '5')
+
+          url = hasFilters
+            ? `/api/tmdb/discover?${params}`
+            : `/api/tmdb/top-rated?pages=5&type=${tmdbType}`
+        }
 
         const res = await fetch(url)
         const data = await res.json()
@@ -121,7 +196,7 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
       }
     }
     fetchSuggested()
-  }, [template.genre, template.decade, template.certification, template.language])
+  }, [template.genre, template.decade, template.certification, template.language, template.category, tmdbType])
 
   useEffect(() => {
     if (debouncedQuery.length < 2) {
@@ -132,7 +207,28 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
     async function search() {
       setSearching(true)
       try {
-        const res = await fetch(`/api/tmdb/search?q=${encodeURIComponent(debouncedQuery)}`)
+        let url: string
+
+        if (template.category === 'books') {
+          url = `/api/books/search?q=${encodeURIComponent(debouncedQuery)}`
+        } else if (template.category === 'games') {
+          url = `/api/games/search?q=${encodeURIComponent(debouncedQuery)}`
+        } else if (template.category === 'podcasts') {
+          url = `/api/podcasts/search?q=${encodeURIComponent(debouncedQuery)}`
+        } else if (template.category === 'cocktails') {
+          url = `/api/cocktails/search?q=${encodeURIComponent(debouncedQuery)}`
+        } else if (template.category === 'breweries') {
+          url = `/api/breweries/search?q=${encodeURIComponent(debouncedQuery)}`
+        } else if (template.category === 'anime') {
+          url = `/api/anime/search?q=${encodeURIComponent(debouncedQuery)}`
+        } else if (template.category === 'music') {
+          const musicType = template.keyword === 'song' ? 'track' : template.keyword === 'artist' ? 'artist' : 'album'
+          url = `/api/music/search?q=${encodeURIComponent(debouncedQuery)}&type=${musicType}`
+        } else {
+          url = `/api/tmdb/search?q=${encodeURIComponent(debouncedQuery)}&type=${tmdbType}`
+        }
+
+        const res = await fetch(url)
         const data = await res.json()
         setSearchResults(data.results || [])
       } catch (error) {
@@ -142,22 +238,23 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
       }
     }
     search()
-  }, [debouncedQuery])
+  }, [debouncedQuery, template.category, tmdbType])
 
-  function toggleMovie(movie: TMDBMovie) {
-    const newSelected = new Map(selectedMovies)
+  function toggleItem(item: BrowseItem) {
+    const newSelected = new Map(selectedItems)
 
-    if (newSelected.has(movie.id)) {
-      newSelected.delete(movie.id)
-      setSelectedMovies(newSelected)
+    if (newSelected.has(item.id)) {
+      newSelected.delete(item.id)
+      setSelectedItems(newSelected)
     } else if (newSelected.size < maxSelectable) {
-      newSelected.set(movie.id, {
-        tmdb_id: movie.id,
-        title: movie.title,
-        poster_path: movie.poster_path,
-        release_year: movie.release_date ? parseInt(movie.release_date.split('-')[0]) : null,
+      newSelected.set(item.id, {
+        external_id: String(item.id),
+        title: item.title,
+        cover_image: item.poster_path,
+        year: item.release_date ? parseInt(item.release_date.split('-')[0]) : null,
+        subtitle: item.author || null,
       })
-      setSelectedMovies(newSelected)
+      setSelectedItems(newSelected)
 
       // Show fun message
       const message = FUN_MESSAGES[Math.floor(Math.random() * FUN_MESSAGES.length)]
@@ -168,12 +265,12 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
   }
 
   function handleSave() {
-    if (selectedMovies.size === 0) return
+    if (selectedItems.size === 0) return
 
     startTransition(async () => {
-      const movies = Array.from(selectedMovies.values())
-      await batchAddListMovies(userListId, movies, existingCount)
-      router.push(`/lists/${userListId}`)
+      const items = Array.from(selectedItems.values())
+      await batchAddListItems(userListId, items, existingCount)
+      router.push(`/${template.category}/lists/${userListId}`)
     })
   }
 
@@ -183,8 +280,8 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
-          <div className="mb-4 text-4xl">🎬</div>
-          <p className="text-lg text-gray-500">Loading movies...</p>
+          <div className="mb-4 text-4xl">{categoryConfig.icon}</div>
+          <p className="text-lg text-gray-500">Loading {categoryConfig.itemNamePlural.toLowerCase()}...</p>
         </div>
       </div>
     )
@@ -195,15 +292,15 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
       {/* Header */}
       <div className="mb-6">
         <Link
-          href={`/lists/${userListId}`}
+          href={`/${template.category}/lists/${userListId}`}
           className="mb-4 inline-block text-sm text-gray-500 hover:text-gray-700"
         >
           ← Back to list
         </Link>
         <h1 className="text-3xl font-bold">{template.display_name}</h1>
         <p className="mt-2 text-gray-500">
-          Tap movies to add them.{' '}
-          {filterLabel ? `Showing top ${filterLabel} films.` : 'Showing top-rated films.'}
+          Tap to add.{' '}
+          {filterLabel ? `Showing top ${filterLabel}.` : `Showing top-rated ${categoryConfig.itemNamePlural.toLowerCase()}.`}
           {template.keyword && ' Use search to find specific titles.'}
         </p>
       </div>
@@ -243,27 +340,28 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for any movie..."
+            placeholder={`Search for ${categoryConfig.itemNamePlural.toLowerCase()}...`}
             autoFocus
             className="mt-4 w-full max-w-md rounded-lg border border-gray-300 px-4 py-3 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 dark:border-gray-700 dark:bg-gray-800"
           />
         )}
       </div>
 
-      {/* Movie Grid */}
+      {/* Item Grid */}
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
-        {moviesToShow.map((movie) => {
-          const existingRank = existingByTmdbId.get(movie.id)
+        {moviesToShow.map((item) => {
+          const existingRank = existingByExternalId.get(String(item.id))
           const isInList = existingRank !== undefined
-          const isSelected = selectedMovies.has(movie.id)
+          const isSelected = selectedItems.has(item.id)
           const selectionIndex = isSelected
-            ? Array.from(selectedMovies.keys()).indexOf(movie.id) + 1
+            ? Array.from(selectedItems.keys()).indexOf(item.id) + 1
             : null
+          const imageUrl = getImageUrl(item, template.category)
 
           return (
             <button
-              key={movie.id}
-              onClick={() => !isInList && toggleMovie(movie)}
+              key={item.id}
+              onClick={() => !isInList && toggleItem(item)}
               disabled={isInList || (!isSelected && currentCount >= maxSelectable)}
               className={cn(
                 "group relative aspect-[2/3] overflow-hidden rounded-lg transition-all",
@@ -275,28 +373,28 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
                 !isInList && !isSelected && currentCount >= maxSelectable && "opacity-50"
               )}
             >
-              {movie.poster_path ? (
+              {imageUrl ? (
                 <Image
-                  src={getPosterUrl(movie.poster_path, 'w342')}
-                  alt={movie.title}
+                  src={imageUrl}
+                  alt={item.title}
                   fill
                   className="object-cover"
                   sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 12.5vw"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gray-200 p-2 text-center text-xs text-gray-500 dark:bg-gray-700">
-                  {movie.title}
+                  {item.title}
                 </div>
               )}
 
-              {/* Existing movie badge (green) */}
+              {/* Existing item badge (green) */}
               {isInList && (
                 <div className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-green-500 text-sm font-bold text-white shadow-lg">
                   {existingRank}
                 </div>
               )}
 
-              {/* New selection badge (blue) */}
+              {/* New selection badge (rose) */}
               {!isInList && isSelected && (
                 <div className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-sm font-bold text-white shadow-lg">
                   +{selectionIndex}
@@ -306,10 +404,11 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
               {/* Hover overlay with title */}
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
                 <p className="text-xs font-medium text-white line-clamp-2">
-                  {movie.title}
+                  {item.title}
                 </p>
                 <p className="text-xs text-gray-300">
-                  {movie.release_date?.split('-')[0]}
+                  {item.author && `${item.author} · `}
+                  {item.release_date?.split('-')[0]}
                   {isInList && " · In your list"}
                 </p>
               </div>
@@ -323,7 +422,7 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
       )}
 
       {showSearch && !searching && searchQuery.length >= 2 && searchResults.length === 0 && (
-        <p className="mt-8 text-center text-gray-500">No movies found</p>
+        <p className="mt-8 text-center text-gray-500">No {categoryConfig.itemNamePlural.toLowerCase()} found</p>
       )}
 
       {/* Fun message toast */}
@@ -345,14 +444,14 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
             </div>
             <p className="text-sm text-gray-500">
               {currentCount === 0
-                ? "Tap movies above to get started"
+                ? "Tap above to get started"
                 : `${currentCount} selected`}
             </p>
           </div>
 
           <div className="flex gap-3">
             <Link
-              href={`/lists/${userListId}`}
+              href={`/${template.category}/lists/${userListId}`}
               className="rounded-lg border border-gray-300 px-6 py-3 font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
             >
               Cancel
@@ -367,7 +466,7 @@ export function ListBrowseFlow({ userListId, template, existingMovies }: Props) 
                   : "cursor-not-allowed bg-gray-300 dark:bg-gray-700"
               )}
             >
-              {isPending ? "Saving..." : currentCount > 0 ? `Add ${currentCount} Movies` : "Select Movies"}
+              {isPending ? "Saving..." : currentCount > 0 ? `Add ${currentCount} ${currentCount === 1 ? categoryConfig.itemName : categoryConfig.itemNamePlural}` : "Select"}
             </button>
           </div>
         </div>

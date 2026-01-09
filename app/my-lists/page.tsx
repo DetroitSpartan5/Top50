@@ -1,11 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
-import type { UserMovie, ListTemplate } from '@/types/database'
+import type { ListTemplate } from '@/types/database'
 import { CreateListButton } from '@/components/create-list-button'
-import { formatListDescription } from '@/lib/list-names'
-import { getPosterUrl } from '@/lib/utils'
+import { ListCard } from '@/components/list-card'
+import { CATEGORY_LIST, type ListCategory } from '@/lib/categories'
 
 export const metadata = {
   title: 'My Lists',
@@ -21,176 +20,142 @@ export default async function MyListsPage() {
     redirect('/login')
   }
 
-  // Get Top 50 movies
-  const { data: top50Movies } = await supabase
-    .from('user_movies')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('rank', { ascending: true })
-    .limit(5)
+  // Get user's profile
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('username, avatar_url')
+    .eq('id', user.id)
+    .single()
 
-  const { count: top50Count } = await supabase
-    .from('user_movies')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-
-  // Get custom lists
-  const { data: customLists } = await supabase
+  // Get all user lists with items for cover images
+  const { data: allLists } = await supabase
     .from('user_lists')
     .select(`
       *,
       list_templates (*),
-      list_movies (count)
+      list_items (id, cover_image)
     `)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  const hasTop50 = (top50Count || 0) > 0
-  const hasCustomLists = customLists && customLists.length > 0
+  // Group lists by category
+  const listsByCategory = new Map<ListCategory, any[]>()
+  CATEGORY_LIST.forEach(config => listsByCategory.set(config.slug, []))
+
+  allLists?.forEach(list => {
+    const template = list.list_templates as ListTemplate
+    const category = template.category as ListCategory
+    listsByCategory.get(category)?.push(list)
+  })
+
+  // Count total lists
+  const totalLists = allLists?.length || 0
 
   return (
-    <div>
+    <div className="mx-auto max-w-7xl px-4 py-8">
+      {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">My Lists</h1>
           <p className="mt-1 text-gray-500">
-            Your movie rankings and collections
+            {totalLists === 0
+              ? 'Start building your collections'
+              : `${totalLists} list${totalLists === 1 ? '' : 's'} across all categories`}
           </p>
         </div>
         <CreateListButton />
       </div>
 
-      {/* Core Top 50 - Always Featured */}
-      <div className="mb-8">
-        <Link
-          href="/my-lists/top-50"
-          className="block rounded-xl border-2 border-rose-200 bg-gradient-to-r from-rose-50 to-pink-50 p-6 transition-all hover:border-rose-400 hover:shadow-md dark:border-rose-900 dark:from-rose-950/50 dark:to-pink-950/50 dark:hover:border-rose-700"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-rose-500 dark:text-rose-400">
-                Core List
-              </div>
-              <h2 className="text-2xl font-bold">My Favorites</h2>
-              <p className="mt-1 text-gray-600 dark:text-gray-400">
-                Your all-time favorite movies, ranked
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-rose-500">
-                {top50Count || 0}
-                <span className="text-lg font-normal text-gray-400">/50</span>
-              </div>
-              <div className="mt-1 h-2 w-32 overflow-hidden rounded-full bg-rose-200 dark:bg-rose-900">
-                <div
-                  className="h-full bg-rose-500"
-                  style={{ width: `${((top50Count || 0) / 50) * 100}%` }}
-                />
-              </div>
-            </div>
+      {/* Empty state */}
+      {totalLists === 0 && (
+        <div className="rounded-xl border-2 border-dashed border-gray-300 p-12 text-center dark:border-gray-700">
+          <div className="mb-4 text-5xl">
+            {CATEGORY_LIST.map(config => config.icon).join(' ')}
           </div>
-
-          {/* Preview of top movies */}
-          {hasTop50 && top50Movies && (
-            <div className="mt-4 flex gap-2">
-              {top50Movies.slice(0, 5).map((movie: UserMovie) => (
-                <div key={movie.id} className="relative">
-                  {movie.poster_path ? (
-                    <Image
-                      src={getPosterUrl(movie.poster_path, 'w92')}
-                      alt={movie.title}
-                      width={46}
-                      height={69}
-                      className="rounded shadow-sm"
-                    />
-                  ) : (
-                    <div className="flex h-[69px] w-[46px] items-center justify-center rounded bg-gray-300 text-xs text-gray-500 dark:bg-gray-700">
-                      {movie.rank}
-                    </div>
-                  )}
-                  <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-xs font-bold text-white">
-                    {movie.rank}
-                  </div>
-                </div>
-              ))}
-              {(top50Count || 0) > 5 && (
-                <div className="flex h-[69px] w-[46px] items-center justify-center rounded bg-gray-100 text-sm text-gray-500 dark:bg-gray-800">
-                  +{(top50Count || 0) - 5}
-                </div>
-              )}
-            </div>
-          )}
-
-          {!hasTop50 && (
-            <div className="mt-4 text-sm text-rose-500 dark:text-rose-400">
-              Start building your definitive movie ranking →
-            </div>
-          )}
-        </Link>
-      </div>
-
-      {/* Custom Lists */}
-      <div>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-            Custom Lists
-          </h2>
-          {!hasCustomLists && (
-            <span className="text-sm text-gray-400">
-              Create themed lists like &quot;Top 10 Horror&quot;
-            </span>
-          )}
+          <h2 className="mb-2 text-xl font-semibold">No lists yet</h2>
+          <p className="mb-6 text-gray-500">
+            Create your first list to start ranking your favorites
+          </p>
+          <CreateListButton variant="primary" />
         </div>
+      )}
 
-        {hasCustomLists ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {customLists.map((list: any) => {
-              const template = list.list_templates as ListTemplate
-              const movieCount = list.list_movies?.[0]?.count || 0
-              const maxCount = parseInt(template.max_count)
-              const description = formatListDescription(
-                template.genre,
-                template.decade,
-                template.max_count
-              )
+      {/* Lists grouped by category */}
+      {CATEGORY_LIST.map(config => {
+        const lists = listsByCategory.get(config.slug) || []
+
+        if (lists.length === 0) return null
+
+        return (
+          <section key={config.slug} className="mb-10">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{config.icon}</span>
+                <h2 className="text-xl font-semibold">{config.namePlural}</h2>
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-sm text-gray-500 dark:bg-gray-800">
+                  {lists.length}
+                </span>
+              </div>
+              <Link
+                href={`/${config.slug}`}
+                className="text-sm text-gray-500 hover:text-rose-500"
+              >
+                Browse all {config.namePlural.toLowerCase()} →
+              </Link>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {lists.map((list: any) => {
+                const template = list.list_templates as ListTemplate
+                return (
+                  <ListCard
+                    key={list.id}
+                    id={list.id}
+                    category={config.slug}
+                    displayName={template.display_name}
+                    maxCount={template.max_count}
+                    username={profile?.username}
+                    avatarUrl={profile?.avatar_url}
+                    itemCount={list.list_items?.length || 0}
+                    coverImages={list.list_items?.slice(0, 3).map((i: any) => i.cover_image).filter(Boolean) || []}
+                    isOwner
+                  />
+                )
+              })}
+            </div>
+          </section>
+        )
+      })}
+
+      {/* Quick create for empty categories */}
+      {totalLists > 0 && (
+        <section className="mt-12">
+          <h2 className="mb-4 text-lg font-semibold text-gray-600 dark:text-gray-400">
+            Start a new category
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {CATEGORY_LIST.map(config => {
+              const lists = listsByCategory.get(config.slug) || []
+
+              if (lists.length > 0) return null
 
               return (
                 <Link
-                  key={list.id}
-                  href={`/lists/${list.id}`}
-                  className="rounded-lg border border-gray-200 p-5 transition-colors hover:border-rose-400 hover:bg-gray-50 dark:border-gray-800 dark:hover:border-rose-700 dark:hover:bg-gray-800/50"
+                  key={config.slug}
+                  href={`/${config.slug}`}
+                  className="flex items-center gap-3 rounded-lg border-2 border-dashed border-gray-300 p-4 transition-colors hover:border-rose-400 dark:border-gray-700 dark:hover:border-rose-600"
                 >
-                  <h3 className="font-semibold">{template.display_name}</h3>
-                  <p className="mt-1 text-sm text-gray-500">{description}</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-sm text-gray-400">
-                      {movieCount} / {maxCount}
-                    </span>
-                    <div className="h-2 w-20 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                      <div
-                        className="h-full bg-rose-500"
-                        style={{ width: `${(movieCount / maxCount) * 100}%` }}
-                      />
-                    </div>
+                  <span className="text-3xl">{config.icon}</span>
+                  <div>
+                    <div className="font-medium">{config.namePlural}</div>
+                    <div className="text-sm text-gray-500">Create your first list</div>
                   </div>
                 </Link>
               )
             })}
-
-            {/* Create new list card */}
-            <div className="flex min-h-[120px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-5 transition-colors hover:border-rose-400 dark:border-gray-700 dark:hover:border-rose-600">
-              <CreateListButton variant="ghost" />
-            </div>
           </div>
-        ) : (
-          <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center dark:border-gray-700">
-            <p className="mb-4 text-gray-500">
-              Beyond your favorites, create focused lists for any genre, decade, or mood
-            </p>
-            <CreateListButton variant="primary" />
-          </div>
-        )}
-      </div>
+        </section>
+      )}
     </div>
   )
 }

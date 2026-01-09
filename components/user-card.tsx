@@ -4,13 +4,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { FollowButton } from './follow-button'
 import { getPosterUrl } from '@/lib/utils'
+import { CATEGORIES, type ListCategory } from '@/lib/categories'
 
-interface TopMovie {
+interface TopItem {
   id: string
-  tmdb_id: number | null
   title: string
-  poster_path: string | null
-  rank: number
+  cover_image: string | null
+  category: ListCategory
 }
 
 interface UserCardProps {
@@ -19,9 +19,9 @@ interface UserCardProps {
     username: string | null
     avatar_url: string | null
     bio: string | null
-    movie_count: number
-    top_movies?: TopMovie[]
-    overlap_count?: number
+    listCount: number
+    categories: ListCategory[]
+    topItems: TopItem[]
   }
   isFollowing: boolean
   isCurrentUser: boolean
@@ -34,49 +34,48 @@ export function UserCard({
   isCurrentUser,
   showFollowButton,
 }: UserCardProps) {
-  const topMovies = profile.top_movies || []
-  const hasOverlap = (profile.overlap_count || 0) > 0
+  const topItems = profile.topItems || []
+  const categories = profile.categories || []
 
   return (
     <div className="group overflow-hidden rounded-xl border border-gray-200 transition-shadow hover:shadow-lg dark:border-gray-800">
-      {/* Movie poster strip */}
-      {topMovies.length > 0 && (
-        <Link href={`/users/${profile.username}`}>
-          <div className="flex h-24 overflow-hidden bg-gray-100 dark:bg-gray-800">
-            {topMovies.map((movie, i) => (
+      {/* Top items strip - shows #1 from each category */}
+      <Link href={`/users/${profile.username}`}>
+        <div className="flex h-24 overflow-hidden bg-gray-100 dark:bg-gray-800">
+          {topItems.length > 0 ? (
+            topItems.map((item) => (
               <div
-                key={movie.id}
+                key={item.id}
                 className="relative flex-1"
-                style={{ minWidth: '20%' }}
               >
-                {movie.poster_path ? (
-                  <Image
-                    src={getPosterUrl(movie.poster_path, 'w185')}
-                    alt={movie.title}
-                    fill
-                    className="object-cover"
-                    sizes="20vw"
-                  />
+                {item.cover_image ? (
+                  <>
+                    <Image
+                      src={getPosterUrl(item.cover_image, 'w185')}
+                      alt={item.title}
+                      fill
+                      className="object-cover"
+                      sizes="25vw"
+                    />
+                    {/* Category icon overlay */}
+                    <div className="absolute bottom-1 right-1 rounded bg-black/60 px-1 py-0.5 text-xs">
+                      {CATEGORIES[item.category]?.icon}
+                    </div>
+                  </>
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gray-200 text-xs text-gray-400 dark:bg-gray-700">
-                    {i + 1}
+                  <div className="flex h-full w-full flex-col items-center justify-center bg-gray-200 text-gray-400 dark:bg-gray-700">
+                    <span className="text-2xl">{CATEGORIES[item.category]?.icon}</span>
                   </div>
                 )}
               </div>
-            ))}
-            {/* Fill remaining slots if less than 5 */}
-            {Array.from({ length: Math.max(0, 5 - topMovies.length) }).map((_, i) => (
-              <div
-                key={`empty-${i}`}
-                className="flex flex-1 items-center justify-center bg-gray-100 text-gray-300 dark:bg-gray-800"
-                style={{ minWidth: '20%' }}
-              >
-                ?
-              </div>
-            ))}
-          </div>
-        </Link>
-      )}
+            ))
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-gray-400">
+              No lists yet
+            </div>
+          )}
+        </div>
+      </Link>
 
       <div className="p-4">
         <div className="flex items-start justify-between">
@@ -95,12 +94,16 @@ export function UserCard({
                   )}
                 </h3>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <span>{profile.movie_count} movies</span>
-                  {hasOverlap && (
+                  <span>{profile.listCount} list{profile.listCount !== 1 ? 's' : ''}</span>
+                  {categories.length > 0 && (
                     <>
                       <span>·</span>
-                      <span className="text-green-600 dark:text-green-400">
-                        {profile.overlap_count} in common
+                      <span className="flex gap-0.5">
+                        {categories.map((cat) => (
+                          <span key={cat} title={CATEGORIES[cat]?.namePlural}>
+                            {CATEGORIES[cat]?.icon}
+                          </span>
+                        ))}
                       </span>
                     </>
                   )}

@@ -4,7 +4,7 @@ import type { UserMovie } from '@/types/database'
 import { MovieList } from '@/components/movie-list'
 
 export const metadata = {
-  title: 'My List',
+  title: 'My Favorites',
 }
 
 export default async function MyListPage() {
@@ -17,6 +17,25 @@ export default async function MyListPage() {
     redirect('/login')
   }
 
+  // Check if user has a core movies list (post-migration)
+  const { data: coreList } = await supabase
+    .from('user_lists')
+    .select(`
+      id,
+      list_templates!inner (category)
+    `)
+    .eq('user_id', user.id)
+    .eq('list_templates.category', 'movies')
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  // If user has a migrated list, redirect to it
+  if (coreList) {
+    redirect(`/movies/lists/${coreList.id}`)
+  }
+
+  // Otherwise show the old user_movies view
   const { data: movies } = await supabase
     .from('user_movies')
     .select('*')

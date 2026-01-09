@@ -1,13 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import type { UserMovie, ListTemplate } from '@/types/database'
-import { MovieList } from '@/components/movie-list'
+import type { ListTemplate } from '@/types/database'
 import { FollowButton } from '@/components/follow-button'
 import { ShareButton } from '@/components/share-button'
 import { SignupCTA } from '@/components/signup-cta'
 import { EditBio } from '@/components/edit-bio'
-import { formatListDescription } from '@/lib/list-names'
+import { ListCard } from '@/components/list-card'
+import { CATEGORY_LIST, type ListCategory } from '@/lib/categories'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -20,8 +20,8 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params
   return {
-    title: `${username}'s Favorites`,
-    description: `Check out ${username}'s favorite movies on topofmine`,
+    title: `${username}'s Profile`,
+    description: `Check out ${username}'s lists on topofmine`,
   }
 }
 
@@ -41,14 +41,35 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
     notFound()
   }
 
-  // Get the user's movies
-  const { data: movies } = await supabase
-    .from('user_movies')
-    .select('*')
+  // Get user's lists with items for cover images
+  const { data: userLists } = await supabase
+    .from('user_lists')
+    .select(`
+      *,
+      list_templates (*),
+      list_items (id, cover_image)
+    `)
     .eq('user_id', profile.id)
-    .order('rank', { ascending: true })
+    .order('created_at', { ascending: false })
 
-  // Get followers with profiles
+  // Group lists by category
+  const listsByCategory = new Map<ListCategory, any[]>()
+  CATEGORY_LIST.forEach(config => listsByCategory.set(config.slug, []))
+
+  userLists?.forEach(list => {
+    const template = list.list_templates as ListTemplate
+    const category = template.category as ListCategory
+    listsByCategory.get(category)?.push(list)
+  })
+
+  // Count totals per category
+  const categoryCounts = CATEGORY_LIST.map(config => ({
+    ...config,
+    count: listsByCategory.get(config.slug)?.length || 0,
+    itemCount: listsByCategory.get(config.slug)?.reduce((sum, list) => sum + (list.list_items?.length || 0), 0) || 0
+  })).filter(c => c.count > 0)
+
+  // Get followers
   const { data: followerRows } = await supabase
     .from('follows')
     .select('follower_id')
@@ -64,7 +85,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
     followers = followerProfiles || []
   }
 
-  // Get following with profiles
+  // Get following
   const { data: followingRows } = await supabase
     .from('follows')
     .select('following_id')
@@ -88,7 +109,6 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
 
   // Check if current user is following this profile
   let isFollowing = false
-  let overlapCount = 0
   if (user && !isOwner) {
     const { data: follow } = await supabase
       .from('follows')
@@ -97,38 +117,18 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
       .eq('following_id', profile.id)
       .single()
     isFollowing = !!follow
-
-    // Calculate movie overlap
-    const { data: myMovies } = await supabase
-      .from('user_movies')
-      .select('tmdb_id')
-      .eq('user_id', user.id)
-
-    if (myMovies && movies) {
-      const myTmdbIds = new Set(myMovies.map((m) => m.tmdb_id).filter(Boolean))
-      overlapCount = movies.filter((m) => m.tmdb_id && myTmdbIds.has(m.tmdb_id)).length
-    }
   }
 
-  // Get user's custom lists
-  const { data: userLists } = await supabase
-    .from('user_lists')
-    .select(`
-      *,
-      list_templates (*),
-      list_movies (count)
-    `)
-    .eq('user_id', profile.id)
-    .order('created_at', { ascending: false })
-
-  const activeTab = tab || 'movies'
+  const totalLists = userLists?.length || 0
+  const activeTab = tab || 'lists'
 
   return (
-    <div>
+    <div className="mx-auto max-w-7xl px-4 py-8">
+      {/* Profile Header */}
       <div className="mb-8">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-2xl font-bold text-rose-600 dark:bg-rose-900 dark:text-rose-400">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-rose-100 text-3xl font-bold text-rose-600 dark:bg-rose-900 dark:text-rose-400">
               {profile.username?.[0]?.toUpperCase() || '?'}
             </div>
             <div>
@@ -140,26 +140,26 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
                   </span>
                 )}
               </h1>
-              <div className="mt-1 flex gap-4 text-sm">
-                <span className="text-gray-500">{movies?.length || 0} movies</span>
-                <Link
-                  href={`/users/${username}?tab=followers`}
+              <div className="mt-2 flex gap-4 text-sm">
+                <span className="text-gray-500">
+                  {totalLists} list{totalLists !== 1 ? 's' : ''}
+                </span>
+                <button
                   className={`hover:text-rose-500 ${activeTab === 'followers' ? 'font-semibold text-rose-500' : 'text-gray-500'}`}
                 >
                   {followers.length} followers
-                </Link>
-                <Link
-                  href={`/users/${username}?tab=following`}
+                </button>
+                <button
                   className={`hover:text-rose-500 ${activeTab === 'following' ? 'font-semibold text-rose-500' : 'text-gray-500'}`}
                 >
                   {following.length} following
-                </Link>
+                </button>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <ShareButton username={profile.username || ''} movieCount={movies?.length || 0} />
+            <ShareButton username={profile.username || ''} movieCount={totalLists} />
 
             {user && !isOwner && (
               <FollowButton userId={profile.id} initialIsFollowing={isFollowing} />
@@ -187,33 +187,35 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
         ) : profile.bio ? (
           <p className="mt-4 text-gray-600 dark:text-gray-400">{profile.bio}</p>
         ) : null}
-
-        {/* Overlap badge for logged-in users */}
-        {user && !isOwner && overlapCount > 0 && (
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-400">
-            <span className="font-medium">{overlapCount} movies in common</span>
-          </div>
-        )}
-
-        {/* Overlap teaser for non-logged-in users */}
-        {!user && movies && movies.length > 0 && (
-          <div className="mt-4">
-            <SignupCTA variant="compare" username={profile.username || 'this user'} />
-          </div>
-        )}
       </div>
+
+      {/* Category Stats */}
+      {categoryCounts.length > 0 && (
+        <div className="mb-8 flex flex-wrap gap-3">
+          {categoryCounts.map(cat => (
+            <div
+              key={cat.slug}
+              className="flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 dark:bg-gray-800"
+            >
+              <span>{cat.icon}</span>
+              <span className="font-medium">{cat.count}</span>
+              <span className="text-gray-500">{cat.count === 1 ? 'list' : 'lists'}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="mb-6 flex gap-4 border-b border-gray-200 dark:border-gray-800">
         <Link
           href={`/users/${username}`}
           className={`border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${
-            activeTab === 'movies'
+            activeTab === 'lists'
               ? 'border-rose-500 text-rose-500'
               : 'border-transparent text-gray-500 hover:text-gray-700'
           }`}
         >
-          Movies
+          Lists ({totalLists})
         </Link>
         <Link
           href={`/users/${username}?tab=followers`}
@@ -235,39 +237,83 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
         >
           Following ({following.length})
         </Link>
-        <Link
-          href={`/users/${username}?tab=lists`}
-          className={`border-b-2 px-1 pb-2 text-sm font-medium transition-colors ${
-            activeTab === 'lists'
-              ? 'border-rose-500 text-rose-500'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Lists ({userLists?.length || 0})
-        </Link>
       </div>
 
-      {/* Tab content */}
-      {activeTab === 'movies' && (
-        <MovieList movies={(movies as UserMovie[]) || []} isOwner={isOwner} />
+      {/* Lists Tab */}
+      {activeTab === 'lists' && (
+        <div>
+          {totalLists === 0 ? (
+            <div className="rounded-lg border border-dashed border-gray-300 p-12 text-center dark:border-gray-700">
+              <p className="text-gray-500">
+                {isOwner ? "You haven't created any lists yet." : "No lists yet."}
+              </p>
+              {isOwner && (
+                <Link
+                  href="/my-lists"
+                  className="mt-4 inline-block text-rose-500 hover:underline"
+                >
+                  Create your first list →
+                </Link>
+              )}
+            </div>
+          ) : (
+            CATEGORY_LIST.map(config => {
+              const lists = listsByCategory.get(config.slug) || []
+              if (lists.length === 0) return null
+
+              return (
+                <section key={config.slug} className="mb-10">
+                  <div className="mb-4 flex items-center gap-2">
+                    <span className="text-2xl">{config.icon}</span>
+                    <h2 className="text-xl font-semibold">{config.namePlural}</h2>
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-sm text-gray-500 dark:bg-gray-800">
+                      {lists.length}
+                    </span>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {lists.map((list: any) => {
+                      const template = list.list_templates as ListTemplate
+                      return (
+                        <ListCard
+                          key={list.id}
+                          id={list.id}
+                          category={config.slug}
+                          displayName={template.display_name}
+                          maxCount={template.max_count}
+                          username={profile.username}
+                          avatarUrl={profile.avatar_url}
+                          itemCount={list.list_items?.length || 0}
+                          coverImages={list.list_items?.slice(0, 3).map((i: any) => i.cover_image).filter(Boolean) || []}
+                          isOwner={isOwner}
+                        />
+                      )
+                    })}
+                  </div>
+                </section>
+              )
+            })
+          )}
+        </div>
       )}
 
+      {/* Followers Tab */}
       {activeTab === 'followers' && (
         <div>
           {followers.length === 0 ? (
             <p className="text-gray-500">No followers yet.</p>
           ) : (
-            <div className="space-y-3">
-              {followers.map((user) => (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {followers.map((follower) => (
                 <Link
-                  key={user.id}
-                  href={`/users/${user.username}`}
-                  className="flex items-center gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
+                  key={follower.id}
+                  href={`/users/${follower.username}`}
+                  className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 hover:border-rose-400 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 font-bold text-rose-600 dark:bg-rose-900 dark:text-rose-400">
-                    {user.username?.[0]?.toUpperCase() || '?'}
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-lg font-bold text-rose-600 dark:bg-rose-900 dark:text-rose-400">
+                    {follower.username?.[0]?.toUpperCase() || '?'}
                   </div>
-                  <span className="font-medium">{user.username}</span>
+                  <span className="font-medium">@{follower.username}</span>
                 </Link>
               ))}
             </div>
@@ -275,6 +321,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
         </div>
       )}
 
+      {/* Following Tab */}
       {activeTab === 'following' && (
         <div>
           {following.length === 0 ? (
@@ -290,17 +337,17 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
               )}
             </p>
           ) : (
-            <div className="space-y-3">
-              {following.map((user) => (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {following.map((followedUser) => (
                 <Link
-                  key={user.id}
-                  href={`/users/${user.username}`}
-                  className="flex items-center gap-3 rounded-lg border border-gray-200 p-3 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
+                  key={followedUser.id}
+                  href={`/users/${followedUser.username}`}
+                  className="flex items-center gap-3 rounded-lg border border-gray-200 p-4 hover:border-rose-400 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 font-bold text-rose-600 dark:bg-rose-900 dark:text-rose-400">
-                    {user.username?.[0]?.toUpperCase() || '?'}
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-lg font-bold text-rose-600 dark:bg-rose-900 dark:text-rose-400">
+                    {followedUser.username?.[0]?.toUpperCase() || '?'}
                   </div>
-                  <span className="font-medium">{user.username}</span>
+                  <span className="font-medium">@{followedUser.username}</span>
                 </Link>
               ))}
             </div>
@@ -308,54 +355,11 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
         </div>
       )}
 
-      {activeTab === 'lists' && (
-        <div>
-          {!userLists || userLists.length === 0 ? (
-            <p className="text-gray-500">No custom lists yet.</p>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {userLists.map((list: any) => {
-                const template = list.list_templates as ListTemplate
-                const movieCount = list.list_movies?.[0]?.count || 0
-                const maxCount = parseInt(template.max_count)
-                const description = formatListDescription(
-                  template.genre,
-                  template.decade,
-                  template.max_count
-                )
-
-                return (
-                  <Link
-                    key={list.id}
-                    href={`/lists/${list.id}`}
-                    className="rounded-lg border border-gray-200 p-4 transition-colors hover:border-rose-500 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
-                  >
-                    <h3 className="font-semibold text-rose-500">
-                      {template.display_name}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500">{description}</p>
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="text-sm text-gray-400">
-                        {movieCount} / {maxCount}
-                      </span>
-                      <div className="h-2 w-20 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                        <div
-                          className="h-full bg-rose-500"
-                          style={{ width: `${(movieCount / maxCount) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Bottom CTA for non-logged-in users */}
       {!user && (
-        <SignupCTA variant="create" />
+        <div className="mt-12">
+          <SignupCTA variant="create" />
+        </div>
       )}
     </div>
   )

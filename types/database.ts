@@ -35,6 +35,10 @@ export type UserMovieWithProfile = UserMovie & {
 }
 
 // Custom Lists types
+import type { ListCategory } from '@/lib/categories'
+
+export type { ListCategory }
+
 export type ListGenre =
   | 'action'
   | 'adventure'
@@ -54,6 +58,39 @@ export type ListGenre =
   | 'thriller'
   | 'war'
   | 'western'
+  // Podcast-specific genres
+  | 'truecrime'
+  | 'news'
+  | 'technology'
+  | 'business'
+  // Cocktail-specific genres
+  | 'cocktail'
+  | 'shot'
+  | 'ordinary'
+  | 'punch'
+  // Brewery-specific genres
+  | 'micro'
+  | 'brewpub'
+  | 'regional'
+  | 'nano'
+  | 'large'
+  | 'contract'
+  // Anime-specific genres
+  | 'mecha'
+  | 'slice_of_life'
+  | 'sports'
+  | 'supernatural'
+  // Music-specific genres
+  | 'rock'
+  | 'pop'
+  | 'hiphop'
+  | 'electronic'
+  | 'jazz'
+  | 'classical'
+  | 'rnb'
+  | 'metal'
+  | 'indie'
+  | 'country'
 
 export type ListDecade =
   | '1950s'
@@ -75,6 +112,10 @@ export type ListKeyword =
   | 'time_travel'
   | 'dystopia'
   | 'christmas'
+  // Music type keywords
+  | 'album'
+  | 'song'
+  | 'artist'
 
 export type ListCertification = 'g' | 'pg' | 'pg13' | 'r'
 
@@ -84,6 +125,7 @@ export type ListCount = '5' | '10' | '25' | '50'
 
 export type ListTemplate = {
   id: string
+  category: ListCategory
   genre: ListGenre | null
   decade: ListDecade | null
   keyword: ListKeyword | null
@@ -91,6 +133,7 @@ export type ListTemplate = {
   language: ListLanguage | null
   max_count: ListCount
   display_name: string
+  is_core: boolean
   created_by: string | null
   created_at: string
 }
@@ -102,6 +145,20 @@ export type UserList = {
   created_at: string
 }
 
+// Generic list item (for all categories)
+export type ListItem = {
+  id: string
+  user_list_id: string
+  title: string
+  external_id: string | null
+  cover_image: string | null
+  subtitle: string | null  // Author for books, developer for games, etc
+  year: number | null
+  rank: number
+  created_at: string
+}
+
+// Legacy type alias for backwards compatibility
 export type ListMovie = {
   id: string
   user_list_id: string
@@ -118,6 +175,13 @@ export type UserListWithTemplate = UserList & {
 }
 
 export type UserListWithDetails = UserList & {
+  list_templates: ListTemplate
+  list_items: ListItem[]
+  profiles?: Pick<Profile, 'username' | 'avatar_url'>
+}
+
+// Legacy type with list_movies
+export type UserListWithMovies = UserList & {
   list_templates: ListTemplate
   list_movies: ListMovie[]
   profiles?: Pick<Profile, 'username' | 'avatar_url'>

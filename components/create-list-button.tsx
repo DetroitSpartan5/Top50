@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createList } from '@/app/lists/actions'
+import { createList, getTemplateUserCount } from '@/app/lists/actions'
 import type {
   ListGenre,
   ListDecade,
@@ -97,9 +97,37 @@ export function CreateListButton({ variant = 'default' }: Props) {
   const [count, setCount] = useState<ListCount>('10')
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [userCount, setUserCount] = useState<number>(0)
+  const [isLoadingCount, setIsLoadingCount] = useState(false)
   const router = useRouter()
 
   const description = formatListDescription(genre, decade, count, keyword, certification, language)
+
+  // Fetch user count when params change
+  const fetchUserCount = useCallback(async () => {
+    setIsLoadingCount(true)
+    try {
+      const result = await getTemplateUserCount({
+        genre,
+        decade,
+        keyword,
+        certification,
+        language,
+        maxCount: count,
+      })
+      setUserCount(result)
+    } catch {
+      setUserCount(0)
+    } finally {
+      setIsLoadingCount(false)
+    }
+  }, [genre, decade, keyword, certification, language, count])
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchUserCount()
+    }
+  }, [isOpen, fetchUserCount])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -271,6 +299,11 @@ export function CreateListButton({ variant = 'default' }: Props) {
                   You&apos;re creating:
                 </p>
                 <p className="font-medium">{description}</p>
+                {!isLoadingCount && userCount > 0 && (
+                  <p className="mt-2 text-sm text-rose-500">
+                    Join {userCount} other{userCount === 1 ? '' : 's'} with this list
+                  </p>
+                )}
               </div>
 
               {error && (
@@ -290,7 +323,7 @@ export function CreateListButton({ variant = 'default' }: Props) {
                   disabled={isPending}
                   className="flex-1 rounded-md bg-rose-500 px-4 py-2 text-white hover:bg-rose-600 disabled:opacity-50"
                 >
-                  {isPending ? 'Creating...' : 'Create List'}
+                  {isPending ? 'Creating...' : userCount > 0 ? `Join ${userCount} Others` : 'Create List'}
                 </button>
               </div>
             </form>

@@ -18,7 +18,7 @@ import {
 } from '@dnd-kit/sortable'
 import type { ListMovie } from '@/types/database'
 import { ListMovieCard } from './list-movie-card'
-import { reorderListMovies } from '@/app/lists/actions'
+import { reorderListItems } from '@/app/lists/actions'
 
 interface ListMovieListProps {
   movies: ListMovie[]
@@ -62,7 +62,7 @@ export function ListMovieList({
       setMovies(newMovies)
 
       startTransition(async () => {
-        await reorderListMovies(userListId, newMovies.map((m) => m.id))
+        await reorderListItems(userListId, newMovies.map((m) => m.id))
       })
     }
   }
