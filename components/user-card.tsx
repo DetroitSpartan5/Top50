@@ -43,32 +43,37 @@ export function UserCard({
       <Link href={`/users/${profile.username}`}>
         <div className="flex h-24 overflow-hidden bg-gray-100 dark:bg-gray-800">
           {topItems.length > 0 ? (
-            topItems.map((item) => (
-              <div
-                key={item.id}
-                className="relative flex-1"
-              >
-                {item.cover_image ? (
-                  <>
-                    <Image
-                      src={getPosterUrl(item.cover_image, 'w185')}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                      sizes="25vw"
-                    />
-                    {/* Category icon overlay */}
-                    <div className="absolute bottom-1 right-1 rounded bg-black/60 px-1 py-0.5 text-xs">
-                      {CATEGORIES[item.category]?.icon}
+            topItems.map((item) => {
+              const isExternal = item.cover_image?.startsWith('http')
+              const imageUrl = item.cover_image ? getPosterUrl(item.cover_image, 'w185') : null
+              return (
+                <div
+                  key={item.id}
+                  className="relative flex-1"
+                >
+                  {imageUrl ? (
+                    <>
+                      <Image
+                        src={imageUrl}
+                        alt={item.title}
+                        fill
+                        className="object-cover"
+                        sizes="25vw"
+                        unoptimized={isExternal}
+                      />
+                      {/* Category icon overlay */}
+                      <div className="absolute bottom-1 right-1 rounded bg-black/60 px-1 py-0.5 text-xs">
+                        {CATEGORIES[item.category]?.icon}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center bg-gray-200 text-gray-400 dark:bg-gray-700">
+                      <span className="text-2xl">{CATEGORIES[item.category]?.icon}</span>
                     </div>
-                  </>
-                ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center bg-gray-200 text-gray-400 dark:bg-gray-700">
-                    <span className="text-2xl">{CATEGORIES[item.category]?.icon}</span>
-                  </div>
-                )}
-              </div>
-            ))
+                  )}
+                </div>
+              )
+            })
           ) : (
             <div className="flex h-full w-full items-center justify-center text-gray-400">
               No lists yet
