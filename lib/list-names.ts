@@ -1,0 +1,159 @@
+// Templated list names based on parameters
+
+const genreLabels: Record<string, string> = {
+  action: 'Action',
+  adventure: 'Adventure',
+  animation: 'Animation',
+  comedy: 'Comedy',
+  crime: 'Crime',
+  documentary: 'Documentary',
+  drama: 'Drama',
+  family: 'Family',
+  fantasy: 'Fantasy',
+  history: 'History',
+  horror: 'Horror',
+  music: 'Music',
+  mystery: 'Mystery',
+  romance: 'Romance',
+  scifi: 'Sci-Fi',
+  thriller: 'Thriller',
+  war: 'War',
+  western: 'Western',
+}
+
+const keywordLabels: Record<string, string> = {
+  remake: 'Remake',
+  sequel: 'Sequel',
+  based_on_book: 'Book Adaptation',
+  based_on_true_story: 'True Story',
+  superhero: 'Superhero',
+  anime: 'Anime',
+  time_travel: 'Time Travel',
+  dystopia: 'Dystopian',
+  christmas: 'Christmas',
+}
+
+const certificationLabels: Record<string, string> = {
+  g: 'G-Rated',
+  pg: 'PG',
+  pg13: 'PG-13',
+  r: 'R-Rated',
+}
+
+const languageLabels: Record<string, string> = {
+  ko: 'Korean',
+  ja: 'Japanese',
+  fr: 'French',
+  es: 'Spanish',
+  de: 'German',
+  it: 'Italian',
+  zh: 'Chinese',
+  hi: 'Hindi',
+  pt: 'Portuguese',
+}
+
+interface ListParams {
+  genre?: string | null
+  decade?: string | null
+  keyword?: string | null
+  certification?: string | null
+  language?: string | null
+  count: string
+}
+
+export function generateListName(
+  genre: string | null,
+  decade: string | null,
+  count: string,
+  keyword?: string | null,
+  certification?: string | null,
+  language?: string | null
+): string {
+  // Build name like "Top 10 Horror Movies" or "Top 25 1980s Comedies"
+  // or "Top 10 Remakes" or "Top 10 Korean Films"
+  const parts: string[] = [`Top ${count}`]
+
+  // Add decade if present
+  if (decade) {
+    parts.push(decade)
+  }
+
+  // Add language if present (e.g., "Korean")
+  if (language && languageLabels[language]) {
+    parts.push(languageLabels[language])
+  }
+
+  // Add certification if present (e.g., "G-Rated")
+  if (certification && certificationLabels[certification]) {
+    parts.push(certificationLabels[certification])
+  }
+
+  // Determine the main category name
+  if (keyword && keywordLabels[keyword]) {
+    // Keywords become plural nouns: "Remakes", "Sequels", "Book Adaptations"
+    const label = keywordLabels[keyword]
+    if (label.endsWith('y')) {
+      parts.push(label.slice(0, -1) + 'ies')
+    } else if (label.includes(' ')) {
+      // Multi-word: "Book Adaptation" -> "Book Adaptations"
+      parts.push(label + 's')
+    } else {
+      parts.push(label + 's')
+    }
+  } else if (genre && genreLabels[genre]) {
+    const genreLabel = genreLabels[genre]
+    // Pluralize genre: "Comedy" -> "Comedies", "Horror" -> "Horrors"
+    if (genreLabel.endsWith('y')) {
+      parts.push(genreLabel.slice(0, -1) + 'ies')
+    } else {
+      parts.push(genreLabel + 's')
+    }
+  } else {
+    // Default to "Movies" or "Films" based on language
+    parts.push(language ? 'Films' : 'Movies')
+  }
+
+  return parts.join(' ')
+}
+
+export function formatListDescription(
+  genre: string | null,
+  decade: string | null,
+  count: string,
+  keyword?: string | null,
+  certification?: string | null,
+  language?: string | null
+): string {
+  // Build a readable description
+  const descriptors: string[] = []
+
+  if (certification && certificationLabels[certification]) {
+    descriptors.push(certificationLabels[certification])
+  }
+
+  if (language && languageLabels[language]) {
+    descriptors.push(languageLabels[language])
+  }
+
+  if (genre && genreLabels[genre]) {
+    descriptors.push(genreLabels[genre])
+  }
+
+  if (keyword && keywordLabels[keyword]) {
+    descriptors.push(keywordLabels[keyword])
+  }
+
+  let result = `Top ${count} `
+
+  if (descriptors.length > 0) {
+    result += descriptors.join(' ') + ' '
+  }
+
+  result += 'Movies'
+
+  if (decade) {
+    result += ` of the ${decade}`
+  }
+
+  return result
+}
